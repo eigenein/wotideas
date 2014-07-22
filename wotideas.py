@@ -12,6 +12,8 @@ import os
 import pathlib
 import pickle
 
+import motor
+import pymongo
 import tornado.ioloop
 import tornado.web
 
@@ -22,6 +24,8 @@ def main(args):
     "Entry point."
     logging.info("Checking environment…")
     check_environment()
+    logging.info("Initializing database…")
+    initialize_database()
     logging.info("Initializing application…")
     initialize_web_application().listen(8080)
     logging.info("I/O loop is being started.")
@@ -47,6 +51,11 @@ def check_environment():
         raise ValueError("not found: templates")
 
 
+def initialize_database():
+    "Initializes database."
+    motor.MotorClient().wotideas.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
+
+
 def initialize_web_application():
     "Initializes application handlers."
     return tornado.web.Application(
@@ -56,6 +65,7 @@ def initialize_web_application():
             (r"/logout", LogOutHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
+        database=motor.MotorClient().wotideas,
         static_path="static",
         template_path="templates",
     )
