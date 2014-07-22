@@ -494,3 +494,10 @@ ul {
   margin: 0;
   padding: 0;
 }
+.pager {
+  margin: 20px;
+}
+.pager ul li {
+  display: inline-block;
+  margin: 10px;
+}
