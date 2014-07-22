@@ -37,6 +37,8 @@ a {
   }
 }
 
+@small-margin: 10px;
+
 .navbar {
   height: @navbar-height;
   width: 100%;
@@ -47,7 +49,7 @@ a {
     display: inline-block;
   }
   li a {
-    padding: 0 10px;
+    padding: 0 @small-margin;
     border: none;
   }
 }
@@ -57,8 +59,10 @@ a {
   top: 0;
 }
 
+@large-margin: 20px;
+
 h1[role=banner] {
-  margin: 0 20px;
+  margin-right: @large-margin;
   font-size: 18px;
   font-weight: normal;
   line-height: 18px;
@@ -78,12 +82,13 @@ h1[role=banner] {
   margin: auto;
   width: @inner-width;
   position: relative;
+  padding: 0 @large-margin;
 }
 
 .navbar-right {
   position: absolute;
   top: 0;
-  right: 0;
+  right: @large-margin;
 }
 
 .content-inner {
@@ -100,15 +105,15 @@ h2 {
 
 .annotation {
   font-size: 12px;
-  margin: 20px;
+  margin: @large-margin;
   line-height: 18px;
 }
 
 .idea {
   background: white;
   border: 1px solid @light;
-  margin: 20px 0;
-  padding: 10px;
+  margin: @large-margin 0;
+  padding: @small-margin;
   -webkit-box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
      -moz-box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
           box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
@@ -118,7 +123,7 @@ h2 {
     li {
       display: inline-block;
       font-size: 16px;
-      margin-right: 10px;
+      margin-right: @small-margin;
     }
     a {
       color: @dark-blue;
@@ -128,6 +133,22 @@ h2 {
       }
     }
     .bet {
+      color: @dark-red;
+    }
+  }
+}
+
+form {
+  margin: 0;
+  padding: 0;
+
+  input[type=submit] {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: black;
+    cursor: pointer;
+    &:hover {
       color: @dark-red;
     }
   }

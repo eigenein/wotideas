@@ -3,14 +3,19 @@
 
 "WoT Ideas Application."
 
+import sys; sys.dont_write_bytecode = True
+
 import argparse
+import collections
 import logging
 import os
 import pathlib
-import sys
+import pickle
 
 import tornado.ioloop
 import tornado.web
+
+import config
 
 
 def main(args):
@@ -47,15 +52,51 @@ def initialize_web_application():
     return tornado.web.Application(
         [
             (r"/", IndexHandler),
+            (r"/signin", SignInHandler),
         ],
+        cookie_secret=config.COOKIE_SECRET,
         static_path="static",
         template_path="templates",
     )
 
 
-class IndexHandler(tornado.web.RequestHandler):
+User = collections.namedtuple("User", ["account_id", "nickname"])
+
+
+class RequestHandler(tornado.web.RequestHandler):
+    "Base request handler."
+    
+    def get_current_user(self):
+        "Gets current user."
+        cookie = self.get_secure_cookie("user")
+        if cookie is not None:
+            return pickle.loads(cookie)
+        else:
+            return None
+
+    def get_template_namespace(self):
+        "Gets default template namespace."
+        return {
+            "application_id": config.APPLICATION_ID,
+            "current_user": self.current_user,
+        }
+
+
+class IndexHandler(RequestHandler):
     def get(self):
         self.render("index.html")
+
+
+class SignInHandler(RequestHandler):
+    "Sign in handler."
+
+    def get(self):
+        if self.get_query_argument("status") == "ok":
+            self.set_secure_cookie("user", pickle.dumps(User(
+                int(self.get_query_argument("account_id")),
+                self.get_query_argument("nickname"),
+            )))
+        self.redirect(self.get_query_argument("next", "/"))
 
 
 # Script entry point.

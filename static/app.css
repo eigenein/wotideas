@@ -396,7 +396,7 @@ a:hover {
   top: 0;
 }
 h1[role=banner] {
-  margin: 0 20px;
+  margin-right: 20px;
   font-size: 18px;
   font-weight: normal;
   line-height: 18px;
@@ -412,11 +412,12 @@ h1[role=banner] a {
   margin: auto;
   width: 1000px;
   position: relative;
+  padding: 0 20px;
 }
 .navbar-right {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 20px;
 }
 .content-inner {
   width: 1000px;
@@ -459,5 +460,19 @@ h2 {
   color: #cc0000;
 }
 .idea footer ul .bet {
+  color: #cc0000;
+}
+form {
+  margin: 0;
+  padding: 0;
+}
+form input[type=submit] {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: black;
+  cursor: pointer;
+}
+form input[type=submit]:hover {
   color: #cc0000;
 }
