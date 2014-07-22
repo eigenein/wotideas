@@ -117,24 +117,23 @@ h2 {
   -webkit-box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
      -moz-box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
           box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
-  footer ul {
-    margin: 0;
-    padding: 0;
-    li {
-      display: inline-block;
-      font-size: 16px;
-      margin-right: @small-margin;
-    }
-    a {
-      color: @dark-blue;
-      border: none;
-      &:hover {
-        color: @dark-red;
-      }
-    }
-    .bet {
+}
+
+.idea-footer ul {
+  li {
+    display: inline-block;
+    font-size: 16px;
+    margin-right: @small-margin;
+  }
+  a {
+    color: @dark-blue;
+    border: none;
+    &:hover {
       color: @dark-red;
     }
+  }
+  .bet {
+    color: @dark-red;
   }
 }
 
@@ -152,4 +151,28 @@ form {
       color: @dark-red;
     }
   }
+}
+
+footer {
+  padding: @small-margin @large-margin;
+  border-top: 1px solid @light;
+  background: white;
+  font-size: 13px;
+  ul li {
+    display: inline-block;
+    margin: @small-margin;
+    color: @darker;
+    a {
+      color: @darker;
+      border-bottom: none;
+      &:hover {
+        color: @darkest;
+      }
+    }
+  }
+}
+
+ul {
+  margin: 0;
+  padding: 0;
 }
