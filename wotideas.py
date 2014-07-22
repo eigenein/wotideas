@@ -70,16 +70,14 @@ class RequestHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         "Gets current user."
         cookie = self.get_secure_cookie("user")
-        if cookie is not None:
-            return pickle.loads(cookie)
-        else:
-            return None
+        return pickle.loads(cookie) if cookie is not None else None
 
     def get_template_namespace(self):
         "Gets default template namespace."
         return {
             "application_id": config.APPLICATION_ID,
             "current_user": self.current_user,
+            "is_admin": self.current_user.account_id in config.ADMIN_ID,
         }
 
 
