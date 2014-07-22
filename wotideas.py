@@ -52,7 +52,8 @@ def initialize_web_application():
     return tornado.web.Application(
         [
             (r"/", IndexHandler),
-            (r"/signin", SignInHandler),
+            (r"/login", LogInHandler),
+            (r"/logout", LogOutHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         static_path="static",
@@ -87,8 +88,8 @@ class IndexHandler(RequestHandler):
         self.render("index.html")
 
 
-class SignInHandler(RequestHandler):
-    "Sign in handler."
+class LogInHandler(RequestHandler):
+    "Log in handler."
 
     def get(self):
         if self.get_query_argument("status") == "ok":
@@ -97,6 +98,14 @@ class SignInHandler(RequestHandler):
                 self.get_query_argument("nickname"),
             )))
         self.redirect(self.get_query_argument("next", "/"))
+
+
+class LogOutHandler(RequestHandler):
+    "Log out handler."
+
+    def get(self):
+        self.clear_cookie("user")
+        self.redirect("/")
 
 
 # Script entry point.

@@ -19,10 +19,10 @@
           --><li><a href="#">Завершенные</a></li><!--
         --></ul><!--
         --><ul class="navbar-nav navbar-right"><!--
-          -->{% if current_user %}<li><a href="#">Предложить событие</a></li><!--
-          --><li><a href="#">Мои ставки</a></li><!--
-          --><li><a href="#">$176.43</a></li><!--
-          -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8080/signin"></form></li>{% end %}<!--
+          -->{% if current_user %}<li><a href="#" title="Ваши ставки">{{ current_user.nickname }}</a></li><!--
+          --><li><a href="#" title="Баланс">123.45</a></li><!--
+          --><li><a href="/logout">Выйти</a></li><!--
+          -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8080/login"></form></li>{% end %}<!--
         --></ul>
       </nav>
     </header>
