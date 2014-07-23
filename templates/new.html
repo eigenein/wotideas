@@ -6,6 +6,7 @@
     <fieldset><label for="freeze-date" style="width: 90px">Заморозка</label><input id="freeze-date" type="date" placeholder="YYYY-MM-DD"><input id="freeze-time" type="time" value="00:00" placeholder="HH:MM"> UTC</fieldset>
     <fieldset><label for="close-date" style="width: 90px">Завершение</label><input id="close-date" type="date" placeholder="YYYY-MM-DD"><input id="close-time" type="time" value="00:00" placeholder="HH:MM"> UTC</fieldset>
     <fieldset><input type="submit" value="Добавить" class="button"></fieldset>
+    {% raw _xsrf %}
   </form>
 </div>
 {% include "footer.html" %}

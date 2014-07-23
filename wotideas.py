@@ -73,6 +73,7 @@ def initialize_web_application():
         db=motor.MotorClient().wotideas,
         static_path="static",
         template_path="templates",
+        xsrf_cookies=True,
     )
 
 
@@ -85,12 +86,12 @@ class RequestHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def prepare(self):
         self.db = self.settings["db"]
-        self.balance = yield self.get_balance() if self.current_user is not None else None
+        self.balance = yield self.get_balance() if (self.current_user is not None) else None
 
     def get_current_user(self):
         "Gets current user."
         cookie = self.get_secure_cookie("user")
-        return pickle.loads(cookie) if cookie is not None else None
+        return pickle.loads(cookie) if (cookie is not None) else None
 
     def get_template_namespace(self):
         "Gets default template namespace."
@@ -139,12 +140,14 @@ class LogInHandler(RequestHandler):
 class NewHandler(RequestHandler):
     "New idea handler."
 
+    @tornado.gen.coroutine
     def prepare(self):
+        yield super().prepare()
         if not self.is_admin():
             self.send_error(http.client.UNAUTHORIZED)
 
     def get(self):
-        self.render("new.html")
+        self.render("new.html", _xsrf=self.xsrf_form_html())
 
     def post(self):
         self.redirect("/")
