@@ -15,6 +15,7 @@ import pickle
 
 import motor
 import pymongo
+import tornado.gen
 import tornado.ioloop
 import tornado.web
 
@@ -54,7 +55,9 @@ def check_environment():
 
 def initialize_database():
     "Initializes database."
-    motor.MotorClient().wotideas.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
+    db = motor.MotorClient().wotideas
+    db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
+    db.accounts.ensure_index("account_id", pymongo.ASCENDING, unique=True)
 
 
 def initialize_web_application():
@@ -79,6 +82,11 @@ User = collections.namedtuple("User", ["account_id", "nickname"])
 class RequestHandler(tornado.web.RequestHandler):
     "Base request handler."
     
+    @tornado.gen.coroutine
+    def prepare(self):
+        self.db = self.settings["db"]
+        self.balance = yield self.get_balance() if self.current_user is not None else None
+
     def get_current_user(self):
         "Gets current user."
         cookie = self.get_secure_cookie("user")
@@ -90,7 +98,14 @@ class RequestHandler(tornado.web.RequestHandler):
             "application_id": config.APPLICATION_ID,
             "current_user": self.current_user,
             "is_admin": self.is_admin(),
+            "balance": self.balance,
         }
+
+    @tornado.gen.coroutine
+    def get_balance(self):
+        "Gets current user balance string."
+        account = yield self.db.accounts.find_one({"account_id": self.current_user.account_id}, {"cents": True})
+        return "{:.2f}".format(account["cents"] / 100.0)
 
     def is_admin(self):
         return (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
@@ -104,13 +119,21 @@ class IndexHandler(RequestHandler):
 class LogInHandler(RequestHandler):
     "Log in handler."
 
+    @tornado.gen.coroutine
     def get(self):
         if self.get_query_argument("status") == "ok":
-            self.set_secure_cookie("user", pickle.dumps(User(
-                int(self.get_query_argument("account_id")),
-                self.get_query_argument("nickname"),
-            )))
+            account_id = int(self.get_query_argument("account_id"))
+            self.set_secure_cookie("user", pickle.dumps(User(account_id, self.get_query_argument("nickname"))))
+            yield self.create_account(account_id)
         self.redirect(self.get_query_argument("next", "/"))
+
+    @tornado.gen.coroutine
+    def create_account(self, account_id):
+        "Creates a new account with initial balance."
+        try:
+            yield self.db.accounts.insert({"account_id": account_id, "cents": 10000})
+        except pymongo.errors.DuplicateKeyError:
+            pass
 
 
 class NewHandler(RequestHandler):
