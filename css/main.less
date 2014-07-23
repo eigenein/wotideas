@@ -11,6 +11,9 @@
 @dark-blue: #0099CC;
 @light-blue: #33B5E5;
 
+@dark-orange: #FF8800;
+@light-orange: #FFBB33;
+
 @navbar-height: 48px;
 
 * {
@@ -140,16 +143,16 @@ h2 {
 form {
   margin: 0;
   padding: 0;
+}
 
-  input[type=submit] {
-    border: 0;
-    padding: 0;
-    background: none;
-    color: black;
-    cursor: pointer;
-    &:hover {
-      color: @dark-red;
-    }
+input.link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: black;
+  cursor: pointer;
+  &:hover {
+    color: @dark-red;
   }
 }
 
@@ -183,4 +186,57 @@ ul {
     display: inline-block;
     margin: @small-margin;
   }
+}
+
+@xsmall-margin: 5px;
+
+fieldset {
+  padding: 0;
+  margin: @small-margin;
+  border: none;
+}
+
+form {
+  input, textarea {
+    width: 100%;
+    padding: @xsmall-margin;
+    border: 1px solid @light;
+    &:focus {
+      border-color: @dark;
+    }
+  }
+  input[type=date], input[type=time] {
+    width: auto;
+    margin: 0 @xsmall-margin;
+  }
+}
+
+textarea {
+  height: 300px;
+}
+
+*:focus {
+    outline: 0;
+}
+
+input.button {
+  background: @light-orange;
+  color: white;
+  -webkit-box-shadow: 0 0 5px 0 @dark-orange;
+     -moz-box-shadow: 0 0 5px 0 @dark-orange;
+          box-shadow: 0 0 5px 0 @dark-orange;
+  border: 1px solid white;
+  padding: @small-margin;
+  outline: none;
+  font-weight: bold;
+  &:active {
+    background: @dark-orange;
+    border: 1px solid white;
+    outline: none;
+  }
+}
+
+label {
+  margin: 0 10px;
+  display: inline-block;
 }

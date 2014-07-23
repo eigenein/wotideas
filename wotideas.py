@@ -7,6 +7,7 @@ import sys; sys.dont_write_bytecode = True
 
 import argparse
 import collections
+import http.client
 import logging
 import os
 import pathlib
@@ -63,9 +64,10 @@ def initialize_web_application():
             (r"/", IndexHandler),
             (r"/login", LogInHandler),
             (r"/logout", LogOutHandler),
+            (r"/new", NewHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
-        database=motor.MotorClient().wotideas,
+        db=motor.MotorClient().wotideas,
         static_path="static",
         template_path="templates",
     )
@@ -87,8 +89,11 @@ class RequestHandler(tornado.web.RequestHandler):
         return {
             "application_id": config.APPLICATION_ID,
             "current_user": self.current_user,
-            "is_admin": self.current_user.account_id in config.ADMIN_ID,
+            "is_admin": self.is_admin(),
         }
+
+    def is_admin(self):
+        return (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
 
 
 class IndexHandler(RequestHandler):
@@ -106,6 +111,20 @@ class LogInHandler(RequestHandler):
                 self.get_query_argument("nickname"),
             )))
         self.redirect(self.get_query_argument("next", "/"))
+
+
+class NewHandler(RequestHandler):
+    "New idea handler."
+
+    def prepare(self):
+        if not self.is_admin():
+            self.send_error(http.client.UNAUTHORIZED)
+
+    def get(self):
+        self.render("new.html")
+
+    def post(self):
+        self.redirect("/")
 
 
 class LogOutHandler(RequestHandler):

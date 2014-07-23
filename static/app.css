@@ -462,14 +462,14 @@ form {
   margin: 0;
   padding: 0;
 }
-form input[type=submit] {
+input.link {
   border: 0;
   padding: 0;
   background: none;
   color: black;
   cursor: pointer;
 }
-form input[type=submit]:hover {
+input.link:hover {
   color: #cc0000;
 }
 footer {
@@ -500,4 +500,50 @@ ul {
 .pager ul li {
   display: inline-block;
   margin: 10px;
+}
+fieldset {
+  padding: 0;
+  margin: 10px;
+  border: none;
+}
+form input,
+form textarea {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #eaeaea;
+}
+form input:focus,
+form textarea:focus {
+  border-color: #cccccc;
+}
+form input[type=date],
+form input[type=time] {
+  width: auto;
+  margin: 0 5px;
+}
+textarea {
+  height: 300px;
+}
+*:focus {
+  outline: 0;
+}
+input.button {
+  background: #ffbb33;
+  color: white;
+  -webkit-box-shadow: 0 0 5px 0 #ff8800;
+  -moz-box-shadow: 0 0 5px 0 #ff8800;
+  box-shadow: 0 0 5px 0 #ff8800;
+  border: 1px solid white;
+  padding: 10px;
+  outline: none;
+  font-weight: bold;
+}
+input.button:active {
+  background: #ff8800;
+  border: 1px solid white;
+  outline: none;
+}
+label {
+  margin: 0 10px;
+  display: inline-block;
 }
