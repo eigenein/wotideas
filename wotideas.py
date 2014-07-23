@@ -86,7 +86,7 @@ class RequestHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def prepare(self):
         self.db = self.settings["db"]
-        self.balance = yield self.get_balance() if (self.current_user is not None) else None
+        self.balance = (yield self.get_balance()) if (self.current_user is not None) else None
 
     def get_current_user(self):
         "Gets current user."
