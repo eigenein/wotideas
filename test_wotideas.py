@@ -3,27 +3,33 @@
 
 "Wot Ideas Unit Tests."
 
-import sys; sys.dont_write_bytecode = True
-
-import functools
-
 import motor
 import pytest
 import tornado.gen
 import tornado.ioloop
 
-
-def ioloop(func):
-    "Runs function on Tornado I/O loop."
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        def run():
-            func(*args, **kwargs)
-        tornado.ioloop.IOLoop.instance().run_sync(run)
-    return wrapper
+import wotideas
 
 
-#@ioloop
-#@tornado.gen.coroutine
-def test_a():
-    assert 1
+@pytest.fixture(scope="session")
+def run_sync():
+    return tornado.ioloop.IOLoop.instance().run_sync
+
+
+@pytest.fixture(scope="session")
+def db():
+    return wotideas.initialize_database("test_wotideas")
+
+
+@pytest.fixture
+def ideas(run_sync, db):
+    run_sync(db.ideas.remove)
+    return db.ideas
+
+
+def test_a(run_sync, ideas):
+    @tornado.gen.coroutine
+    def run():
+        yield ideas.insert({})
+        assert (yield ideas.count()) == 1
+    run_sync(run)
