@@ -25,6 +25,9 @@ import tornado.web
 import config
 
 
+# Application entry point.
+# ------------------------------------------------------------------------------
+
 def main(args):
     "Entry point."
     logging.info("Checking environment…")
@@ -47,6 +50,9 @@ def get_argument_parser():
 def configure_logging(args):
     logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s", level=logging.INFO, stream=args.log_file)
 
+
+# Initialization.
+# ------------------------------------------------------------------------------
 
 def check_environment():
     "Checks for prerequisites."
@@ -82,8 +88,14 @@ def initialize_web_application(db):
     )
 
 
+# Session objects.
+# ------------------------------------------------------------------------------
+
 User = collections.namedtuple("User", ["account_id", "nickname"])
 
+
+# Base request handler.
+# ------------------------------------------------------------------------------
 
 def encode_object_id(object_id):
     "Encodes object ID into an URL-safe ID."
@@ -132,6 +144,9 @@ class RequestHandler(tornado.web.RequestHandler):
         self.send_error(http.client.BAD_REQUEST)
 
 
+# Index handler.
+# ------------------------------------------------------------------------------
+
 class IndexRequestHandler(RequestHandler):
     "Home page handler."
 
@@ -158,6 +173,9 @@ class IndexRequestHandler(RequestHandler):
         return page
 
 
+# Log in handler.
+# ------------------------------------------------------------------------------
+
 class LogInRequestHandler(RequestHandler):
     "Log in handler."
 
@@ -177,6 +195,9 @@ class LogInRequestHandler(RequestHandler):
         except pymongo.errors.DuplicateKeyError:
             pass
 
+
+# New idea handler.
+# ------------------------------------------------------------------------------
 
 class NewRequestHandler(RequestHandler):
     "New idea handler."
@@ -238,6 +259,9 @@ class NewRequestHandler(RequestHandler):
         return datetime.datetime.strptime("{} {}".format(date, time), "%Y-%m-%d %H:%M")
 
 
+# Log out handler.
+# ------------------------------------------------------------------------------
+
 class LogOutRequestHandler(RequestHandler):
     "Log out handler."
 
@@ -247,6 +271,8 @@ class LogOutRequestHandler(RequestHandler):
 
 
 # Script entry point.
+# ------------------------------------------------------------------------------
+
 if __name__ == "__main__":
     args = get_argument_parser().parse_args()
     configure_logging(args)
