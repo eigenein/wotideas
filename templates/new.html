@@ -1,10 +1,18 @@
 {% include "header.html" %}
 <div class="content-inner">
   <form action="/new" method="post">
-    <fieldset><input type="text" placeholder="Заголовок" style="font-size: 24px" autofocus></fieldset>
-    <fieldset><textarea placeholder="Описание события"></textarea></fieldset>
-    <fieldset><label for="freeze-date" style="width: 90px">Заморозка</label><input id="freeze-date" type="date" placeholder="YYYY-MM-DD"><input id="freeze-time" type="time" value="00:00" placeholder="HH:MM"> UTC</fieldset>
-    <fieldset><label for="close-date" style="width: 90px">Завершение</label><input id="close-date" type="date" placeholder="YYYY-MM-DD"><input id="close-time" type="time" value="00:00" placeholder="HH:MM"> UTC</fieldset>
+    <fieldset><input type="text" name="title" placeholder="Заголовок" style="font-size: 24px" autofocus></fieldset>
+    <fieldset><textarea name="description" placeholder="Описание события"></textarea></fieldset>
+    <fieldset><!--
+      --><label for="freeze-date" style="width: 90px">Заморозка</label><!--
+      --><input id="freeze-date" name="freeze-date" type="date" placeholder="YYYY-MM-DD"><!--
+      --><input id="freeze-time" name="freeze-time" type="time" value="00:00" placeholder="HH:MM"> UTC<!--
+    --></fieldset>
+    <fieldset><!--
+      --><label for="close-date" style="width: 90px">Завершение</label><!--
+      --><input id="close-date" name="close-date" type="date" placeholder="YYYY-MM-DD"><!--
+      --><input id="close-time" name="close-time" type="time" value="00:00" placeholder="HH:MM"> UTC<!--
+    --></fieldset>
     <fieldset><input type="submit" value="Добавить" class="button"></fieldset>
     {% raw _xsrf %}
   </form>

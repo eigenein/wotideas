@@ -7,6 +7,7 @@ import sys; sys.dont_write_bytecode = True
 
 import argparse
 import collections
+import datetime
 import http.client
 import logging
 import os
@@ -147,10 +148,39 @@ class NewHandler(RequestHandler):
             self.send_error(http.client.UNAUTHORIZED)
 
     def get(self):
+        "Get the form for a new idea."
         self.render("new.html", _xsrf=self.xsrf_form_html())
 
     def post(self):
-        self.redirect("/")
+        "Posts a new idea."
+        try:
+            self.parse_post_request()
+        except (ValueError, tornado.web.MissingArgumentError):
+            logging.exception("Invalid request.")
+            self.send_error(http.client.BAD_REQUEST)
+        else:
+            self.redirect("/")
+
+    def parse_post_request(self):
+        "Parses POST request arguments."
+        title, description, freeze_date, freeze_time, close_date, close_time = map(
+            self.get_argument, ["title", "description", "freeze-date", "freeze-time", "close-date", "close-time"])
+        if not title:
+            raise ValueError("empty title")
+        if not description:
+            raise ValueError("empty description")
+        freeze_datetime = self.parse_datetime(freeze_date, freeze_time)
+        if freeze_datetime < datetime.datetime.utcnow():
+            raise ValueError("freeze datetime is in past")
+        close_datetime = self.parse_datetime(close_date, close_time)
+        if close_datetime < datetime.datetime.utcnow():
+            raise ValueError("close datetime is in past")
+        if close_datetime < freeze_datetime:
+            raise ValueError("close datetime is earlier than freeze datetime")
+
+    def parse_datetime(self, date, time):
+        "Parses date and time strings."
+        return datetime.datetime.strptime("{} {}".format(date, time), "%Y-%m-%d %H:%M")
 
 
 class LogOutHandler(RequestHandler):
