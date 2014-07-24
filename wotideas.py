@@ -6,6 +6,7 @@
 import sys; sys.dont_write_bytecode = True
 
 import argparse
+import base64
 import collections
 import datetime
 import http.client
@@ -110,7 +111,12 @@ class RequestHandler(tornado.web.RequestHandler):
         return "{:.2f}".format(account["cents"] / 100.0)
 
     def is_admin(self):
+        "Gets whether the current user is an admin."
         return (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
+
+    def encode_id(self, object_id):
+        "Encodes object ID into an URL-safe ID."
+        return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
 
 
 class IndexHandler(RequestHandler):
@@ -151,32 +157,45 @@ class NewHandler(RequestHandler):
         "Get the form for a new idea."
         self.render("new.html", _xsrf=self.xsrf_form_html())
 
+    @tornado.gen.coroutine
     def post(self):
         "Posts a new idea."
         try:
-            self.parse_post_request()
+            document = self.parse_post_request()
+            document_id = yield self.db.ideas.insert(document)
         except (ValueError, tornado.web.MissingArgumentError):
             logging.exception("Invalid request.")
             self.send_error(http.client.BAD_REQUEST)
         else:
-            self.redirect("/")
+            self.redirect("/i/{}".format(self.encode_id(document_id)))
 
     def parse_post_request(self):
         "Parses POST request arguments."
         title, description, freeze_date, freeze_time, close_date, close_time = map(
             self.get_argument, ["title", "description", "freeze-date", "freeze-time", "close-date", "close-time"])
+        # Check title and description.
         if not title:
             raise ValueError("empty title")
         if not description:
             raise ValueError("empty description")
+        # Parse freeze datetime.
         freeze_datetime = self.parse_datetime(freeze_date, freeze_time)
         if freeze_datetime < datetime.datetime.utcnow():
             raise ValueError("freeze datetime is in past")
+        # Parse close datetime.
         close_datetime = self.parse_datetime(close_date, close_time)
         if close_datetime < datetime.datetime.utcnow():
             raise ValueError("close datetime is in past")
+        # Check freeze and close datetimes.
         if close_datetime < freeze_datetime:
             raise ValueError("close datetime is earlier than freeze datetime")
+        # Build a document.
+        return {
+            "title": title,
+            "description": description,
+            "freeze_date": freeze_datetime,
+            "close_date": close_datetime,
+        }
 
     def parse_datetime(self, date, time):
         "Parses date and time strings."
