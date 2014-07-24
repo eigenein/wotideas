@@ -140,7 +140,7 @@ class IndexHandler(RequestHandler):
                 skip((page - 1) * self.PAGE_SIZE).\
                 limit(self.PAGE_SIZE).\
                 to_list(self.PAGE_SIZE)
-            self.render("index.html", ideas=ideas, page=page)
+            self.render("index.html", ideas=ideas, page=page, path=self.request.path)
 
     def parse_arguments(self):
         page = int(self.get_query_argument("page", 1))

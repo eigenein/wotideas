@@ -13,6 +13,6 @@
     <div class="idea-footer"><ul><li class="bet">Ваша ставка: <strong>$15</strong> на <strong>«Верно»</strong>.</li><li><a href="#">Изменить ставку</a></li><li><a href="#">Снять ставку</a></li></ul></div>
   </section>
   {% end %}
-  <div class="pager"><ul><li><a href="#">1</a></li><li><a href="#">2</a></li><li><a href="#">Следующая страница →</a></li></ul></div>
+  <div class="pager"><ul>{% for i in range(1, page) %}<li><a href="{{ path }}?page={{ i }}">{{ i }}</a></li>{% end %}<li>{{ page }}</li><li><a href="{{ path }}?page={{ page + 1 }}">Следующая страница →</a></li></ul></div>
 </div>
 {% include "footer.html" %}
