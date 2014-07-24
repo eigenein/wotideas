@@ -59,6 +59,7 @@ def initialize_database():
     "Initializes database."
     db = motor.MotorClient().wotideas
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
+    db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.accounts.ensure_index("account_id", pymongo.ASCENDING, unique=True)
 
 
@@ -66,7 +67,7 @@ def initialize_web_application():
     "Initializes application handlers."
     return tornado.web.Application(
         [
-            (r"/", IndexHandler),
+            (r"/(all|closed)?", IndexHandler),
             (r"/login", LogInHandler),
             (r"/logout", LogOutHandler),
             (r"/new", NewHandler),
@@ -102,6 +103,7 @@ class RequestHandler(tornado.web.RequestHandler):
             "current_user": self.current_user,
             "is_admin": self.is_admin(),
             "balance": self.balance,
+            "encode_id": self.encode_id,
         }
 
     @tornado.gen.coroutine
@@ -129,9 +131,9 @@ class IndexHandler(RequestHandler):
     PAGE_SIZE = 10  # idea page size
 
     @tornado.gen.coroutine
-    def get(self):
+    def get(self, status=None):
         try:
-            page = self.parse_arguments()
+            page = self.parse_arguments(status)
         except ValueError:
             self.handle_bad_request()
         else:
@@ -142,7 +144,7 @@ class IndexHandler(RequestHandler):
                 to_list(self.PAGE_SIZE)
             self.render("index.html", ideas=ideas, page=page, path=self.request.path)
 
-    def parse_arguments(self):
+    def parse_arguments(self, status):
         page = int(self.get_query_argument("page", 1))
         if page < 1:
             raise ValueError("invalid page")
