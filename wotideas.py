@@ -118,10 +118,35 @@ class RequestHandler(tornado.web.RequestHandler):
         "Encodes object ID into an URL-safe ID."
         return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
 
+    def handle_bad_request(self):
+        logging.exception("Invalid request.")
+        self.send_error(http.client.BAD_REQUEST)
+
 
 class IndexHandler(RequestHandler):
+    "Home page handler."
+
+    PAGE_SIZE = 10  # idea page size
+
+    @tornado.gen.coroutine
     def get(self):
-        self.render("index.html")
+        try:
+            page = self.parse_arguments()
+        except ValueError:
+            self.handle_bad_request()
+        else:
+            ideas = yield self.db.ideas.find().\
+                sort("freeze_date", pymongo.DESCENDING).\
+                skip((page - 1) * self.PAGE_SIZE).\
+                limit(self.PAGE_SIZE).\
+                to_list(self.PAGE_SIZE)
+            self.render("index.html", ideas=ideas, page=page)
+
+    def parse_arguments(self):
+        page = int(self.get_query_argument("page", 1))
+        if page < 1:
+            raise ValueError("invalid page")
+        return page
 
 
 class LogInHandler(RequestHandler):
@@ -161,15 +186,14 @@ class NewHandler(RequestHandler):
     def post(self):
         "Posts a new idea."
         try:
-            document = self.parse_post_request()
-            document_id = yield self.db.ideas.insert(document)
+            document = self.parse_arguments()
         except (ValueError, tornado.web.MissingArgumentError):
-            logging.exception("Invalid request.")
-            self.send_error(http.client.BAD_REQUEST)
+            self.handle_bad_request()
         else:
+            document_id = yield self.db.ideas.insert(document)
             self.redirect("/i/{}".format(self.encode_id(document_id)))
 
-    def parse_post_request(self):
+    def parse_arguments(self):
         "Parses POST request arguments."
         title, description, freeze_date, freeze_time, close_date, close_time = map(
             self.get_argument, ["title", "description", "freeze-date", "freeze-time", "close-date", "close-time"])
@@ -178,6 +202,9 @@ class NewHandler(RequestHandler):
             raise ValueError("empty title")
         if not description:
             raise ValueError("empty description")
+        # Split description into paragraphs.
+        lines = description.replace("\r\n", "\n").split("\n")
+        description = [line for line in lines if line]
         # Parse freeze datetime.
         freeze_datetime = self.parse_datetime(freeze_date, freeze_time)
         if freeze_datetime < datetime.datetime.utcnow():
