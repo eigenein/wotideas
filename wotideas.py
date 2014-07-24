@@ -29,9 +29,9 @@ def main(args):
     logging.info("Checking environment…")
     check_environment()
     logging.info("Initializing database…")
-    initialize_database()
+    db = initialize_database("wotideas")
     logging.info("Initializing application…")
-    initialize_web_application().listen(8080)
+    initialize_web_application(db).listen(8080)
     logging.info("I/O loop is being started.")
     tornado.ioloop.IOLoop.current().start()
 
@@ -55,15 +55,16 @@ def check_environment():
         raise ValueError("not found: templates")
 
 
-def initialize_database():
+def initialize_database(name):
     "Initializes database."
-    db = motor.MotorClient().wotideas
+    db = motor.MotorClient()[name]
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
     db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.accounts.ensure_index("account_id", pymongo.ASCENDING, unique=True)
+    return db
 
 
-def initialize_web_application():
+def initialize_web_application(db):
     "Initializes application handlers."
     return tornado.web.Application(
         [
@@ -73,7 +74,7 @@ def initialize_web_application():
             (r"/new", NewHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
-        db=motor.MotorClient().wotideas,
+        db=db,
         static_path="static",
         template_path="templates",
         xsrf_cookies=True,
