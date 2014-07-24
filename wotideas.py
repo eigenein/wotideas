@@ -85,19 +85,16 @@ def initialize_web_application(db):
 User = collections.namedtuple("User", ["account_id", "nickname"])
 
 
-class IdEncoder:
-    "Encodes an object ID into an URL-safe ID and decodes from it."
+def encode_object_id(object_id):
+    "Encodes object ID into an URL-safe ID."
+    return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
 
-    def encode_id(self, object_id):
-        "Encodes object ID into an URL-safe ID."
-        return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
-
-    def decode_id(self, urlsafe_id):
-        "Decodes URL-safe ID into an object ID."
-        return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
+def decode_object_id(urlsafe_id):
+    "Decodes URL-safe ID into an object ID."
+    return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
 
 
-class RequestHandler(tornado.web.RequestHandler, IdEncoder):
+class RequestHandler(tornado.web.RequestHandler):
     "Base request handler."
     
     @tornado.gen.coroutine
@@ -117,7 +114,7 @@ class RequestHandler(tornado.web.RequestHandler, IdEncoder):
             "current_user": self.current_user,
             "is_admin": self.is_admin(),
             "balance": self.balance,
-            "encode_id": self.encode_id,
+            "encode_object_id": encode_object_id,
         }
 
     @tornado.gen.coroutine
@@ -203,7 +200,7 @@ class NewRequestHandler(RequestHandler):
             self.handle_bad_request()
         else:
             document_id = yield self.db.ideas.insert(document)
-            self.redirect("/i/{}".format(self.encode_id(document_id)))
+            self.redirect("/i/{}".format(encode_object_id(document_id)))
 
     def parse_arguments(self):
         "Parses POST request arguments."

@@ -12,14 +12,10 @@ import tornado.ioloop
 import wotideas
 
 
-@pytest.fixture(scope="session")
-def id_encoder():
-    return wotideas.IdEncoder()
-
-
-def test_id_encoder(id_encoder):
+def test_encode_object_id():
+    "Tests encode_object_id and decode_object_id."
     object_id = bson.objectid.ObjectId()
-    assert id_encoder.decode_id(id_encoder.encode_id(object_id)) == object_id
+    assert wotideas.decode_object_id(wotideas.encode_object_id(object_id)) == object_id
 
 
 @pytest.fixture(scope="session")

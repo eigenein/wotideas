@@ -7,7 +7,7 @@
   </section>
   {% for idea in ideas %}
   <section class="idea">
-    <h2><a href="/i/{{ encode_id(idea["_id"]) }}">{{ idea["title"] }}</a></h2>
+    <h2><a href="/i/{{ encode_object_id(idea["_id"]) }}">{{ idea["title"] }}</a></h2>
     <small>Заморозка: <strong>1 августа 2014</strong>. Завершение: <strong>1 сентября 2014</strong>.</small>
     {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
     <div class="idea-footer"><ul><li class="bet">Ваша ставка: <strong>$15</strong> на <strong>«Верно»</strong>.</li><li><a href="#">Изменить ставку</a></li><li><a href="#">Снять ставку</a></li></ul></div>
