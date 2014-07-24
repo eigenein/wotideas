@@ -69,10 +69,10 @@ def initialize_web_application(db):
     "Initializes application handlers."
     return tornado.web.Application(
         [
-            (r"/(all|closed)?", IndexHandler),
-            (r"/login", LogInHandler),
-            (r"/logout", LogOutHandler),
-            (r"/new", NewHandler),
+            (r"/(all|closed)?", IndexRequestHandler),
+            (r"/login", LogInRequestHandler),
+            (r"/logout", LogOutRequestHandler),
+            (r"/new", NewRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -135,7 +135,7 @@ class RequestHandler(tornado.web.RequestHandler, IdEncoder):
         self.send_error(http.client.BAD_REQUEST)
 
 
-class IndexHandler(RequestHandler):
+class IndexRequestHandler(RequestHandler):
     "Home page handler."
 
     PAGE_SIZE = 10  # idea page size
@@ -161,7 +161,7 @@ class IndexHandler(RequestHandler):
         return page
 
 
-class LogInHandler(RequestHandler):
+class LogInRequestHandler(RequestHandler):
     "Log in handler."
 
     @tornado.gen.coroutine
@@ -181,7 +181,7 @@ class LogInHandler(RequestHandler):
             pass
 
 
-class NewHandler(RequestHandler):
+class NewRequestHandler(RequestHandler):
     "New idea handler."
 
     @tornado.gen.coroutine
@@ -241,7 +241,7 @@ class NewHandler(RequestHandler):
         return datetime.datetime.strptime("{} {}".format(date, time), "%Y-%m-%d %H:%M")
 
 
-class LogOutHandler(RequestHandler):
+class LogOutRequestHandler(RequestHandler):
     "Log out handler."
 
     def get(self):
