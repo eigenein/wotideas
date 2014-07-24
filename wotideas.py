@@ -15,6 +15,7 @@ import os
 import pathlib
 import pickle
 
+import bson
 import motor
 import pymongo
 import tornado.gen
@@ -84,7 +85,19 @@ def initialize_web_application(db):
 User = collections.namedtuple("User", ["account_id", "nickname"])
 
 
-class RequestHandler(tornado.web.RequestHandler):
+class IdEncoder:
+    "Encodes an object ID into an URL-safe ID and decodes from it."
+
+    def encode_id(self, object_id):
+        "Encodes object ID into an URL-safe ID."
+        return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
+
+    def decode_id(self, urlsafe_id):
+        "Decodes URL-safe ID into an object ID."
+        return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
+
+
+class RequestHandler(tornado.web.RequestHandler, IdEncoder):
     "Base request handler."
     
     @tornado.gen.coroutine
@@ -116,10 +129,6 @@ class RequestHandler(tornado.web.RequestHandler):
     def is_admin(self):
         "Gets whether the current user is an admin."
         return (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
-
-    def encode_id(self, object_id):
-        "Encodes object ID into an URL-safe ID."
-        return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
 
     def handle_bad_request(self):
         logging.exception("Invalid request.")
