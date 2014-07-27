@@ -8,8 +8,7 @@
 </section>
 
 {% for idea in ideas %}
-{% set frozen_idea = now >= idea["freeze_date"] %}
-{% set closed_idea = now >= idea["close_date"] %}
+{% include "ideavars.html" %}
 <section class="idea {% if closed_idea %}closed-idea{% elif frozen_idea %}frozen-idea{% else %}open-idea{% end %}">
   <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
   <small>Заморозка: <strong class="freeze-date">{{ format_date(idea["freeze_date"]) }} UTC</strong>. Завершение: <strong class="close-date">{{ format_date(idea["close_date"]) }} UTC</strong>.</small>

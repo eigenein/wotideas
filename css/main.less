@@ -64,6 +64,7 @@ a {
 .navbar-fixed {
   position: fixed;
   top: 0;
+  z-index: 1000;
 }
 
 @large-margin: 20px;
@@ -101,6 +102,7 @@ h1[role=banner] {
 .content-inner {
   width: @inner-width;
   margin: auto;
+  position: relative;
 }
 
 h2 {
@@ -261,4 +263,45 @@ label {
   .freeze-date, .close-date {
     color: @dark-red;
   }
+}
+
+@aside-width: 150px;
+
+.with-aside ~ aside {
+  width: @aside-width;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: @small-margin;
+}
+
+.with-aside {
+  margin-right: @small-margin + @aside-width;
+}
+
+.badge {
+  width: 100%;
+  color: white;
+  -webkit-border-radius: @xsmall-margin;
+     -moz-border-radius: @xsmall-margin;
+          border-radius: @xsmall-margin;
+  padding: @small-margin;
+  text-align: center;
+}
+
+.badge-green {
+  background: @dark-green;
+}
+
+.badge-orange {
+  background: @dark-orange;
+}
+
+.badge-red {
+  background: @dark-red;
+}
+
+h3 {
+  margin: @small-margin 0;
+  font-size: 15px;
 }
