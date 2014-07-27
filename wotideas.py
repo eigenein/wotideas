@@ -119,6 +119,7 @@ class RequestHandler(tornado.web.RequestHandler):
     def prepare(self):
         self.db = self.settings["db"]
         self.balance = (yield self.get_balance()) if (self.current_user is not None) else None
+        self.now = datetime.datetime.utcnow()
 
     def get_current_user(self):
         "Gets current user."
@@ -134,7 +135,7 @@ class RequestHandler(tornado.web.RequestHandler):
             "encode_object_id": encode_object_id,  # index
             "format_date": format_date,
             "is_admin": self.is_admin(),
-            "now": datetime.datetime.utcnow(),  # index
+            "now": self.now,  # index
         }
 
     @tornado.gen.coroutine
@@ -167,7 +168,12 @@ class IndexRequestHandler(RequestHandler):
         except ValueError:
             self.handle_bad_request()
         else:
-            ideas = yield self.db.ideas.find().\
+            spec = {}
+            if status == "closed":
+                spec["close_date"] = {"$lt": self.now}
+            elif status != "all":
+                spec["freeze_date"] = {"$gt": self.now}
+            ideas = yield self.db.ideas.find(spec).\
                 sort("freeze_date", pymongo.DESCENDING).\
                 skip((page - 1) * self.PAGE_SIZE).\
                 limit(self.PAGE_SIZE).\
