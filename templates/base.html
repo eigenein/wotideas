@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>WoT Ideas</title>
+    <title>{% block title %}{% end %}WoT Ideas</title>
     <link rel="shortcut icon" href="/favicon.ico" sizes="32x32" type="image/vnd.microsoft.icon">
     <link rel="icon" href="/static/favicon.png" sizes="16x16" type="image/png">
     <link rel="stylesheet" href="/static/app.css">
@@ -27,3 +27,16 @@
         --></ul>
       </nav>
     </header>
+    <div class="content-inner">
+      {% block content %}{% end %}
+    </div>
+  </body>
+  <footer>
+    <ul><!--
+      --><li>eigenein &copy; 2014</li><!--
+      --><li><a href="#">ВКонтакте</a></li><!--
+      --><li><a href="#">Предложить событие</a></li><!--
+    --></ul>
+  </footer>
+</html>
+

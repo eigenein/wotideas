@@ -530,16 +530,16 @@ textarea {
 input.button {
   background: #ffbb33;
   color: white;
-  -webkit-box-shadow: 0 0 5px 0 #669900;
-  -moz-box-shadow: 0 0 5px 0 #669900;
-  box-shadow: 0 0 5px 0 #669900;
+  -webkit-box-shadow: 0 0 5px 0 #ff8800;
+  -moz-box-shadow: 0 0 5px 0 #ff8800;
+  box-shadow: 0 0 5px 0 #ff8800;
   border: 1px solid white;
   padding: 10px;
   outline: none;
   font-weight: bold;
 }
 input.button:active {
-  background: #669900;
+  background: #ff8800;
   border: 1px solid white;
   outline: none;
 }

@@ -79,6 +79,7 @@ def initialize_web_application(db):
             (r"/login", LogInRequestHandler),
             (r"/logout", LogOutRequestHandler),
             (r"/new", NewRequestHandler),
+            (r"/i/([a-zA-Z0-9_\-\=]+)", IdeaRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -104,7 +105,10 @@ def encode_object_id(object_id):
 
 def decode_object_id(urlsafe_id):
     "Decodes URL-safe ID into an object ID."
-    return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
+    try:
+        return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
+    except bson.errors.InvalidId as exception:
+        raise ValueError("invalid ID") from exception
 
 
 def format_date(date):
@@ -271,6 +275,27 @@ class NewRequestHandler(RequestHandler):
     def parse_datetime(self, date, time):
         "Parses date and time strings."
         return datetime.datetime.strptime("{} {}".format(date, time), "%Y-%m-%d %H:%M")
+
+
+# Idea handler.
+# ------------------------------------------------------------------------------
+
+
+class IdeaRequestHandler(RequestHandler):
+    "Idea handler."
+
+    @tornado.gen.coroutine
+    def get(self, urlsafe_id):
+        try:
+            _id = decode_object_id(urlsafe_id)
+        except ValueError:
+            self.handle_bad_request()
+            return
+        idea = yield self.db.ideas.find_one({"_id": _id})
+        if idea:
+            self.render("idea.html", idea=idea)
+        else:
+            self.send_error(http.client.NOT_FOUND)
 
 
 # Log out handler.

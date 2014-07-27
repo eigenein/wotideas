@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}{{ idea["title"] }} — {% end %}
+
+{% block content %}
+<section class="idea">
+  <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
+  {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
+</section>
+{% end %}
