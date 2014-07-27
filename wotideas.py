@@ -65,9 +65,10 @@ def check_environment():
 def initialize_database(name):
     "Initializes database."
     db = motor.MotorClient()[name]
-    db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
-    db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.accounts.ensure_index("account_id", pymongo.ASCENDING, unique=True)
+    db.ideas.ensure_index("close_date", pymongo.DESCENDING)
+    db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
+    db.ideas.ensure_index("resolved", pymongo.ASCENDING)
     return db
 
 
@@ -75,7 +76,7 @@ def initialize_web_application(db):
     "Initializes application handlers."
     return tornado.web.Application(
         [
-            (r"/(all|closed)?", IndexRequestHandler),
+            (r"/(all|closed|unresolved)?", IndexRequestHandler),
             (r"/login", LogInRequestHandler),
             (r"/logout", LogOutRequestHandler),
             (r"/new", NewRequestHandler),
@@ -122,8 +123,12 @@ class RequestHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def prepare(self):
         self.db = self.settings["db"]
+        # Shared template context.
         self.balance = (yield self.get_balance()) if (self.current_user is not None) else None
         self.now = datetime.datetime.utcnow()
+        # Admin stuff.
+        self.is_admin = (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
+        self.unresolved_idea_count = (yield self.get_unresolved_idea_count()) if self.is_admin else None
 
     def get_current_user(self):
         "Gets current user."
@@ -138,8 +143,9 @@ class RequestHandler(tornado.web.RequestHandler):
             "current_user": self.current_user,  # header
             "encode_object_id": encode_object_id,  # index
             "format_date": format_date,
-            "is_admin": self.is_admin(),
-            "now": self.now,  # index
+            "is_admin": self.is_admin,
+            "now": self.now,
+            "unresolved_count": self.unresolved_idea_count,
         }
 
     @tornado.gen.coroutine
@@ -148,9 +154,13 @@ class RequestHandler(tornado.web.RequestHandler):
         account = yield self.db.accounts.find_one({"account_id": self.current_user.account_id}, {"cents": True})
         return "{:.2f}".format(account["cents"] / 100.0)
 
-    def is_admin(self):
-        "Gets whether the current user is an admin."
-        return (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
+    @tornado.gen.coroutine
+    def get_unresolved_idea_count(self):
+        "Gets unresolved idea count for the header link."
+        return (yield self.db.ideas.find({
+            "resolved": False,
+            "close_date": {"$lt": self.now}
+        }).count())
 
     def handle_bad_request(self):
         logging.exception("Invalid request.")
@@ -171,18 +181,22 @@ class IndexRequestHandler(RequestHandler):
             page = self.parse_arguments(status)
         except ValueError:
             self.handle_bad_request()
-        else:
-            spec = {}
-            if status == "closed":
-                spec["close_date"] = {"$lt": self.now}
-            elif status != "all":
-                spec["freeze_date"] = {"$gt": self.now}
-            ideas = yield self.db.ideas.find(spec).\
-                sort("freeze_date", pymongo.DESCENDING).\
-                skip((page - 1) * self.PAGE_SIZE).\
-                limit(self.PAGE_SIZE).\
-                to_list(self.PAGE_SIZE)
-            self.render("index.html", ideas=ideas, page=page, path=self.request.path)
+            return
+        spec = {}
+        if status == "unresolved":
+            spec["resolved"] = False
+            spec["close_date"] = {"$lt": self.now}
+        elif status == "closed":
+            spec["resolved"] = True
+            spec["close_date"] = {"$lt": self.now}
+        elif status != "all":
+            spec["freeze_date"] = {"$gt": self.now}
+        ideas = yield self.db.ideas.find(spec).\
+            sort("freeze_date", pymongo.DESCENDING).\
+            skip((page - 1) * self.PAGE_SIZE).\
+            limit(self.PAGE_SIZE).\
+            to_list(self.PAGE_SIZE)
+        self.render("index.html", ideas=ideas, page=page, path=self.request.path)
 
     def parse_arguments(self, status):
         page = int(self.get_query_argument("page", 1))
@@ -223,7 +237,7 @@ class NewRequestHandler(RequestHandler):
     @tornado.gen.coroutine
     def prepare(self):
         yield super().prepare()
-        if not self.is_admin():
+        if not self.is_admin:
             self.send_error(http.client.UNAUTHORIZED)
 
     def get(self):

@@ -16,6 +16,7 @@
         --><ul class="navbar-nav"><!--
           --><li><a href="/all">Все</a></li><!--
           --><li><a href="/closed">Завершенные</a></li><!--
+          -->{% if unresolved_count %}<li><strong><a href="/unresolved">Ожидают решения ({{ unresolved_count }})</a></strong></li>{% end %}<!--
           --><li><a href="/accounts">Игроки</a></li><!--
           -->{% if is_admin %}<li><strong><a href="/new">Добавить событие</a></strong></li>{% end %}<!--
         --></ul><!--
