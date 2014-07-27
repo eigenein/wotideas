@@ -530,20 +530,36 @@ textarea {
 input.button {
   background: #ffbb33;
   color: white;
-  -webkit-box-shadow: 0 0 5px 0 #ff8800;
-  -moz-box-shadow: 0 0 5px 0 #ff8800;
-  box-shadow: 0 0 5px 0 #ff8800;
+  -webkit-box-shadow: 0 0 5px 0 #669900;
+  -moz-box-shadow: 0 0 5px 0 #669900;
+  box-shadow: 0 0 5px 0 #669900;
   border: 1px solid white;
   padding: 10px;
   outline: none;
   font-weight: bold;
 }
 input.button:active {
-  background: #ff8800;
+  background: #669900;
   border: 1px solid white;
   outline: none;
 }
 label {
   margin: 0 10px;
   display: inline-block;
+}
+.open-idea {
+  border-left: 3px solid #99cc00;
+}
+.frozen-idea {
+  border-left: 3px solid #ffbb33;
+}
+.frozen-idea .freeze-date {
+  color: #cc0000;
+}
+.closed-idea {
+  border-left: 3px solid #ff4444;
+}
+.closed-idea .freeze-date,
+.closed-idea .close-date {
+  color: #cc0000;
 }

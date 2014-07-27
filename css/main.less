@@ -7,12 +7,16 @@
 @lightest: #FAFAFA;
 
 @dark-red: #CC0000;
+@light-red: #FF4444;
 
 @dark-blue: #0099CC;
 @light-blue: #33B5E5;
 
 @dark-orange: #FF8800;
 @light-orange: #FFBB33;
+
+@dark-orange: #669900;
+@light-green: #99CC00;
 
 @navbar-height: 48px;
 
@@ -239,4 +243,22 @@ input.button {
 label {
   margin: 0 10px;
   display: inline-block;
+}
+
+.open-idea {
+  border-left: 3px solid @light-green;
+}
+
+.frozen-idea {
+  border-left: 3px solid @light-orange;
+  .freeze-date {
+    color: @dark-red;
+  }
+}
+
+.closed-idea {
+  border-left: 3px solid @light-red;
+  .freeze-date, .close-date {
+    color: @dark-red;
+  }
 }

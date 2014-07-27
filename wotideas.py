@@ -101,9 +101,15 @@ def encode_object_id(object_id):
     "Encodes object ID into an URL-safe ID."
     return base64.urlsafe_b64encode(object_id.binary).decode("ascii")
 
+
 def decode_object_id(urlsafe_id):
     "Decodes URL-safe ID into an object ID."
     return bson.objectid.ObjectId(base64.urlsafe_b64decode(urlsafe_id.encode("ascii")))
+
+
+def format_date(date):
+    "Formats date and time."
+    return "{date.day}.{date.month:02}.{date.year:04} {date.hour}:{date.minute:02}".format(date=date)
 
 
 class RequestHandler(tornado.web.RequestHandler):
@@ -122,11 +128,13 @@ class RequestHandler(tornado.web.RequestHandler):
     def get_template_namespace(self):
         "Gets default template namespace."
         return {
-            "application_id": config.APPLICATION_ID,
-            "current_user": self.current_user,
+            "application_id": config.APPLICATION_ID,  # header
+            "balance": self.balance,  # header
+            "current_user": self.current_user,  # header
+            "encode_object_id": encode_object_id,  # index
+            "format_date": format_date,
             "is_admin": self.is_admin(),
-            "balance": self.balance,
-            "encode_object_id": encode_object_id,
+            "now": datetime.datetime.utcnow(),  # index
         }
 
     @tornado.gen.coroutine

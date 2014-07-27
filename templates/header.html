@@ -21,7 +21,7 @@
         --></ul><!--
         --><ul class="navbar-nav navbar-right"><!--
           -->{% if current_user %}<li><a href="/profile" title="Ваши ставки">{{ current_user.nickname }}</a></li><!--
-          --><li><a href="/balance" title="Баланс">{{ balance }}</a></li><!--
+          --><li><strong><a href="/balance" title="Баланс">{{ balance }}</a></strong></li><!--
           --><li><a href="/logout">Выйти</a></li><!--
           -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти" class="link"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8080/login"></form></li>{% end %}<!--
         --></ul>

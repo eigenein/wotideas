@@ -1,22 +1,28 @@
 {% include "header.html" %}
 <div class="content-inner">
+
   <section class="annotation">
     <p>
       <strong>World of Tanks Ideas</strong> — это online-проект, объединяющий идеи и факты о планах и развитии игры <a href="http://worldoftanks.ru/" target="_blank">World of Tanks</a>.<br>Решайте, произойдет или не произойдет какое-либо событие в истории игры и делайте свои ставки.
     </p>
   </section>
+
   {% for idea in ideas %}
-  <section class="idea">
-    <h2><a href="/i/{{ encode_object_id(idea["_id"]) }}">{{ idea["title"] }}</a></h2>
-    <small>Заморозка: <strong>1 августа 2014</strong>. Завершение: <strong>1 сентября 2014</strong>.</small>
+  {% set frozen_idea = now >= idea["freeze_date"] %}
+  {% set closed_idea = now >= idea["close_date"] %}
+  <section class="idea {% if closed_idea %}closed-idea{% elif frozen_idea %}frozen-idea{% else %}open-idea{% end %}">
+    <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
+    <small>Заморозка: <strong class="freeze-date">{{ format_date(idea["freeze_date"]) }} UTC</strong>. Завершение: <strong class="close-date">{{ format_date(idea["close_date"]) }} UTC</strong>.</small>
     {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
     <div class="idea-footer"><ul><li class="bet">Ваша ставка: <strong>$15</strong> на <strong>«Верно»</strong>.</li><li><a href="#">Изменить ставку</a></li><li><a href="#">Снять ставку</a></li></ul></div>
   </section>
   {% end %}
+
   <div class="pager"><ul><!--
     -->{% for i in range(1, page) %}<li><a href="{{ path }}?page={{ i }}">{{ i }}</a></li>{% end %}<!--
-    --><li>{{ page }}</li><!--
+    --><li><strong>{{ page }}</strong></li><!--
     --><li><a href="{{ path }}?page={{ page + 1 }}">Следующая страница →</a></li><!--
   --></ul></div>
+
 </div>
 {% include "footer.html" %}
