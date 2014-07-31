@@ -3,14 +3,13 @@
 {% block title %}{{ idea["title"] }} — {% end %}
 
 {% block content %}
-{% include "ideavars.html" %}
 <section class="idea with-aside">
   <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
 </section>
 <aside>
-  {% if closed_idea %}<div class="badge badge-red">Закрыто</div>
-  {% elif frozen_idea %}<div class="badge badge-orange">Заморожено</div>
+  {% if is_idea_closed(idea) %}<div class="badge badge-red">Закрыто</div>
+  {% elif is_idea_frozen(idea) %}<div class="badge badge-orange">Заморожено</div>
   {% else %}<div class="badge badge-green">Открыто</div>
   {% end %}
   <h3>Заморозка</h3>

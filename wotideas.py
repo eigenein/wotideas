@@ -112,6 +112,14 @@ def decode_object_id(urlsafe_id):
         raise ValueError("invalid ID") from exception
 
 
+def is_idea_frozen(idea):
+    return datetime.datetime.utcnow() >= idea["freeze_date"]
+
+
+def is_idea_closed(idea):
+    return datetime.datetime.utcnow() >= idea["close_date"]
+
+
 def format_date(date):
     "Formats date and time."
     return "{date.day}.{date.month:02}.{date.year:04} {date.hour}:{date.minute:02}".format(date=date)
@@ -144,7 +152,8 @@ class RequestHandler(tornado.web.RequestHandler):
             "encode_object_id": encode_object_id,  # index
             "format_date": format_date,
             "is_admin": self.is_admin,
-            "now": self.now,
+            "is_idea_closed": is_idea_closed,
+            "is_idea_frozen": is_idea_frozen,
             "unresolved_count": self.unresolved_idea_count,
         }
 
