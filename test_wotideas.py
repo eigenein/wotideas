@@ -12,11 +12,17 @@ import tornado.ioloop
 import wotideas
 
 
+# Simple tests.
+# ------------------------------------------------------------------------------
+
 def test_encode_object_id():
     "Tests encode_object_id and decode_object_id."
     object_id = bson.objectid.ObjectId()
     assert wotideas.decode_object_id(wotideas.encode_object_id(object_id)) == object_id
 
+
+# Async tests.
+# ------------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def run_sync():

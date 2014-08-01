@@ -15,14 +15,14 @@
         <h1 role="banner"><a class="nav" href="/">WoT Ideas</a> <sup>beta</sup></h1><!--
         --><ul class="navbar-nav"><!--
           --><li><a href="/all">Все</a></li><!--
+          --><li><a href="/unresolved">Ожидают решения</a></li><!--
           --><li><a href="/closed">Завершенные</a></li><!--
-          -->{% if unresolved_count %}<li><strong><a href="/unresolved">Ожидают решения ({{ unresolved_count }})</a></strong></li>{% end %}<!--
           --><li><a href="/accounts">Игроки</a></li><!--
           -->{% if is_admin %}<li><strong><a href="/new">Добавить событие</a></strong></li>{% end %}<!--
         --></ul><!--
         --><ul class="navbar-nav navbar-right"><!--
-          -->{% if current_user %}<li><a href="/profile" title="Ваши ставки">{{ current_user.nickname }}</a></li><!--
-          --><li><strong><a href="/balance" title="Баланс">{{ balance }}</a></strong></li><!--
+          -->{% if current_user %}<li><a href="/profile">{{ current_user.nickname }}</a></li><!--
+          --><li><strong><a href="/balance">{{ balance }} монет</a></strong></li><!--
           --><li><a href="/logout">Выйти</a></li><!--
           -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти" class="link"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8080/login"></form></li>{% end %}<!--
         --></ul>

@@ -204,8 +204,9 @@ fieldset {
 
 form {
   input, textarea {
-    width: 100%;
     padding: @xsmall-margin;
+  }
+  input, textarea {
     border: 1px solid @light;
     &:focus {
       border-color: @dark;
@@ -217,6 +218,10 @@ form {
   }
 }
 
+.full-width {
+  width: 100%;
+}
+
 textarea {
   height: 300px;
 }
@@ -225,7 +230,7 @@ textarea {
     outline: 0;
 }
 
-input.button {
+.button {
   background: @light-orange;
   color: white;
   -webkit-box-shadow: 0 0 5px 0 @dark-orange;
@@ -235,10 +240,30 @@ input.button {
   padding: @small-margin;
   outline: none;
   font-weight: bold;
-  &:active {
+  &:active, input:checked + & {
     background: @dark-orange;
     border: 1px solid white;
     outline: none;
+  }
+}
+
+.button.button-green {
+  background: @light-green;
+  -webkit-box-shadow: 0 0 5px 0 @dark-green;
+     -moz-box-shadow: 0 0 5px 0 @dark-green;
+          box-shadow: 0 0 5px 0 @dark-green;
+  &:active, input:checked + & {
+    background: @dark-green;
+  }
+}
+
+.button.button-red {
+  background: @light-red;
+  -webkit-box-shadow: 0 0 5px 0 @dark-red;
+     -moz-box-shadow: 0 0 5px 0 @dark-red;
+          box-shadow: 0 0 5px 0 @dark-red;
+  &:active, input:checked + & {
+    background: @dark-red;
   }
 }
 
@@ -287,6 +312,7 @@ label {
           border-radius: @xsmall-margin;
   padding: @small-margin;
   text-align: center;
+  margin: @small-margin 0;
 }
 
 .badge-green {
@@ -304,4 +330,39 @@ label {
 h3 {
   margin: @small-margin 0;
   font-size: 15px;
+}
+
+input[type=radio] {
+  display: none;
+}
+
+table {
+  width: 100%;
+  margin: @large-margin 0;
+}
+
+th, td {
+  padding: @xsmall-margin;
+  text-align: left;
+}
+
+th {
+  border-bottom: 1px solid @light;
+}
+
+th.right, td.right {
+  text-align: right;
+}
+
+.positive {
+  color: @dark-green;
+}
+
+.negative {
+  color: @dark-red;
+}
+
+.budget {
+  color: @dark-orange;
+  font-size: 24px;
 }

@@ -4,14 +4,30 @@
 
 {% block content %}
 <section class="idea with-aside">
-  <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
+  {% set urlsafe_id = encode_object_id(idea['_id']) %}
+  <h2><a href="/i/{{ urlsafe_id }}">{{ idea["title"] }}</a></h2>
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
+  <form method="post" action="/i/{{ urlsafe_id }}/bet"><!--
+    --><input type="number" name="coins" min="1" step="1" max="{{ balance }}" value="{{ balance }}" style="padding: 10px"><!--
+    --><input type="radio" name="bet" id="bet-true" value="1" checked><label for="bet-true" class="button button-green" style="margin-right: 0">Произойдет</label><!--
+    --><input type="radio" name="bet" id="bet-false" value="0"><label for="bet-false" class="button button-red" style="margin-left: 0">Не произойдет</label><!--
+    --><input class="button" type="submit" value="Сделать ставку"><!--
+  -->{% raw _xsrf %}</form>
+  <table>
+    <tr><th>Игрок</th><th>Ставка</th><th class="right">Сумма</th></tr>
+    {% for bet in idea["bets"][::-1] %}
+    <tr><td>{{ bet["nickname"] }}</td><td>{% if bet["bet"] %}<span class="positive">Произойдет</span>{% else %}<span class="negative">Не произойдет</span>{% end %}</td><td class="right">{{ bet["coins"] }}</td></tr>
+    {% end %}
+  </table>
 </section>
 <aside>
   {% if is_idea_closed(idea) %}<div class="badge badge-red">Закрыто</div>
   {% elif is_idea_frozen(idea) %}<div class="badge badge-orange">Заморожено</div>
   {% else %}<div class="badge badge-green">Открыто</div>
   {% end %}
+  <div class="badge badge-green">Произошло</div>
+  <h3>Призовой фонд</h3>
+  <span class="budget">123</span>
   <h3>Заморозка</h3>
   {{ format_date(idea["freeze_date"]) }}
   <h3>Закрытие</h3>

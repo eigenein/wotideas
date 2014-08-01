@@ -9,6 +9,7 @@ import argparse
 import base64
 import collections
 import datetime
+import enum
 import http.client
 import logging
 import os
@@ -65,7 +66,6 @@ def check_environment():
 def initialize_database(name):
     "Initializes database."
     db = motor.MotorClient()[name]
-    db.accounts.ensure_index("account_id", pymongo.ASCENDING, unique=True)
     db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
     db.ideas.ensure_index("resolved", pymongo.ASCENDING)
@@ -81,6 +81,7 @@ def initialize_web_application(db):
             (r"/logout", LogOutRequestHandler),
             (r"/new", NewRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)", IdeaRequestHandler),
+            (r"/i/([a-zA-Z0-9_\-\=]+)/bet", BetRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -90,10 +91,18 @@ def initialize_web_application(db):
     )
 
 
-# Session objects.
+# Shared objects.
 # ------------------------------------------------------------------------------
 
 User = collections.namedtuple("User", ["account_id", "nickname"])
+
+
+class SystemEventType(enum.Enum):
+    "System event type. Do not change these constants."
+
+    LOGGED_IN = 1
+    SET_INITIAL_BALANCE = 2
+    MADE_BET = 3
 
 
 # Base request handler.
@@ -113,10 +122,12 @@ def decode_object_id(urlsafe_id):
 
 
 def is_idea_frozen(idea):
+    "Gets whether the idea is frozen."
     return datetime.datetime.utcnow() >= idea["freeze_date"]
 
 
 def is_idea_closed(idea):
+    "Gets whether the idea is closed."
     return datetime.datetime.utcnow() >= idea["close_date"]
 
 
@@ -136,7 +147,6 @@ class RequestHandler(tornado.web.RequestHandler):
         self.now = datetime.datetime.utcnow()
         # Admin stuff.
         self.is_admin = (self.current_user is not None) and (self.current_user.account_id in config.ADMIN_ID)
-        self.unresolved_idea_count = (yield self.get_unresolved_idea_count()) if self.is_admin else None
 
     def get_current_user(self):
         "Gets current user."
@@ -154,14 +164,13 @@ class RequestHandler(tornado.web.RequestHandler):
             "is_admin": self.is_admin,
             "is_idea_closed": is_idea_closed,
             "is_idea_frozen": is_idea_frozen,
-            "unresolved_count": self.unresolved_idea_count,
         }
 
     @tornado.gen.coroutine
     def get_balance(self):
         "Gets current user balance string."
-        account = yield self.db.accounts.find_one({"account_id": self.current_user.account_id}, {"cents": True})
-        return "{:.2f}".format(account["cents"] / 100.0)
+        account = yield self.db.accounts.find_one({"_id": self.current_user.account_id}, {"coins": True})
+        return account["coins"]
 
     @tornado.gen.coroutine
     def get_unresolved_idea_count(self):
@@ -170,6 +179,11 @@ class RequestHandler(tornado.web.RequestHandler):
             "resolved": False,
             "close_date": {"$lt": self.now}
         }).count())
+
+    @tornado.gen.coroutine
+    def log_event(self, event_type, **kwargs):
+        "Logs system event."
+        yield self.db.events.insert({"type": event_type.value, "kwargs": kwargs})
 
     def handle_bad_request(self):
         logging.exception("Invalid request.")
@@ -187,7 +201,7 @@ class IndexRequestHandler(RequestHandler):
     @tornado.gen.coroutine
     def get(self, status=None):
         try:
-            page = self.parse_arguments(status)
+            page = self.parse_arguments()
         except ValueError:
             self.handle_bad_request()
             return
@@ -207,7 +221,7 @@ class IndexRequestHandler(RequestHandler):
             to_list(self.PAGE_SIZE)
         self.render("index.html", ideas=ideas, page=page, path=self.request.path)
 
-    def parse_arguments(self, status):
+    def parse_arguments(self):
         page = int(self.get_query_argument("page", 1))
         if page < 1:
             raise ValueError("invalid page")
@@ -220,19 +234,29 @@ class IndexRequestHandler(RequestHandler):
 class LogInRequestHandler(RequestHandler):
     "Log in handler."
 
+    def get_template_namespace(self):
+        "Gets default template namespace."
+        return {}
+
+    @tornado.gen.coroutine
+    def prepare(self):
+        self.db = self.settings["db"]  # override default
+
     @tornado.gen.coroutine
     def get(self):
         if self.get_query_argument("status") == "ok":
             account_id = int(self.get_query_argument("account_id"))
             self.set_secure_cookie("user", pickle.dumps(User(account_id, self.get_query_argument("nickname"))))
             yield self.create_account(account_id)
+            yield self.log_event(SystemEventType.LOGGED_IN, account_id=account_id)
         self.redirect(self.get_query_argument("next", "/"))
 
     @tornado.gen.coroutine
     def create_account(self, account_id):
         "Creates a new account with initial balance."
         try:
-            yield self.db.accounts.insert({"account_id": account_id, "cents": 10000})
+            yield self.db.accounts.insert({"_id": account_id, "coins": 100})
+            yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id)
         except pymongo.errors.DuplicateKeyError:
             pass
 
@@ -293,6 +317,8 @@ class NewRequestHandler(RequestHandler):
             "description": description,
             "freeze_date": freeze_datetime,
             "close_date": close_datetime,
+            "resolved": False,
+            "bets": [],
         }
 
     def parse_datetime(self, date, time):
@@ -316,9 +342,57 @@ class IdeaRequestHandler(RequestHandler):
             return
         idea = yield self.db.ideas.find_one({"_id": _id})
         if idea:
-            self.render("idea.html", idea=idea)
+            self.render("idea.html", idea=idea, _xsrf=self.xsrf_form_html())
         else:
             self.send_error(http.client.NOT_FOUND)
+
+
+# Bet handler.
+# ------------------------------------------------------------------------------
+
+class BetRequestHandler(RequestHandler):
+    "Bet handler."
+
+    @tornado.gen.coroutine
+    def post(self, urlsafe_id):
+        try:
+            if self.current_user is None:
+                raise ValueError("no user logged in")
+            user = self.current_user
+            idea_id = decode_object_id(urlsafe_id)
+            bet, coins = self.parse_arguments()
+            yield self.make_bet(user, idea_id, bet, coins)
+        except (ValueError, tornado.web.MissingArgumentError):
+            self.handle_bad_request()
+            return
+        else:
+            self.redirect("/i/{}".format(urlsafe_id))
+
+    def parse_arguments(self):
+        bet = bool(int(self.get_argument("bet")))
+        coins = int(self.get_argument("coins"))
+        if coins <= 0:
+            raise ValueError("invalid coins value: %s" % coins)
+        return bet, coins
+
+    @tornado.gen.coroutine
+    def make_bet(self, user, idea_id, bet, coins):
+        "Makes a bet."
+        account = yield self.db.accounts.find_and_modify(
+            {
+                "_id": user.account_id,
+                "coins": {"$gte": coins},
+            },
+            {"$inc": {"coins": -coins}},
+            new=True,
+        )
+        if not account:
+            raise ValueError("not enough coins")
+        yield self.db.ideas.update(
+            {"_id": idea_id},
+            {"$push": {"bets": {"account_id": user.account_id, "nickname": user.nickname, "coins": coins, "bet": bet}}},
+        )
+        yield self.log_event(SystemEventType.MADE_BET, account_id=user.account_id, idea_id=idea_id, bet=bet, coins=coins, coins_left=account["coins"])
 
 
 # Log out handler.
@@ -326,6 +400,14 @@ class IdeaRequestHandler(RequestHandler):
 
 class LogOutRequestHandler(RequestHandler):
     "Log out handler."
+
+    def get_template_namespace(self):
+        "Gets default template namespace."
+        return {}
+
+    @tornado.gen.coroutine
+    def prepare(self):
+        pass  # override default
 
     def get(self):
         self.clear_cookie("user")
