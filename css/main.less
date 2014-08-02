@@ -128,24 +128,6 @@ h2 {
           box-shadow: 0 3px 4px -3px rgba(0, 0, 0, .1);
 }
 
-.idea-footer ul {
-  li {
-    display: inline-block;
-    font-size: 16px;
-    margin-right: @small-margin;
-  }
-  a {
-    color: @dark-blue;
-    border: none;
-    &:hover {
-      color: @dark-red;
-    }
-  }
-  .bet {
-    color: @dark-red;
-  }
-}
-
 form {
   margin: 0;
   padding: 0;
@@ -248,7 +230,7 @@ textarea {
 }
 
 .button.button-green {
-  background: @light-green;
+  background: fade(@light-green, 50%);
   -webkit-box-shadow: 0 0 5px 0 @dark-green;
      -moz-box-shadow: 0 0 5px 0 @dark-green;
           box-shadow: 0 0 5px 0 @dark-green;
@@ -258,7 +240,7 @@ textarea {
 }
 
 .button.button-red {
-  background: @light-red;
+  background: fade(@light-red, 50%);
   -webkit-box-shadow: 0 0 5px 0 @dark-red;
      -moz-box-shadow: 0 0 5px 0 @dark-red;
           box-shadow: 0 0 5px 0 @dark-red;
@@ -365,4 +347,22 @@ th.right, td.right {
 .budget {
   color: @dark-orange;
   font-size: 24px;
+}
+
+.empty-index {
+  font-size: 24px;
+  margin: @large-margin;
+  background: white;
+  border: 1px solid @light;
+  padding: @large-margin;
+}
+
+.bet-warning {
+  color: @light-red;
+  font-size: 12.8px;
+}
+
+.bet-hint {
+  color: @dark-green;
+  font-weight: bold;
 }

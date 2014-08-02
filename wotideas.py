@@ -12,6 +12,7 @@ import datetime
 import enum
 import http.client
 import logging
+import operator
 import os
 import pathlib
 import pickle
@@ -69,6 +70,7 @@ def initialize_database(name):
     db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
     db.ideas.ensure_index("resolved", pymongo.ASCENDING)
+    db.ideas.ensure_index("bets.account_id", pymongo.ASCENDING)
     return db
 
 
@@ -170,7 +172,7 @@ class RequestHandler(tornado.web.RequestHandler):
     def get_balance(self):
         "Gets current user balance string."
         account = yield self.db.accounts.find_one({"_id": self.current_user.account_id}, {"coins": True})
-        return account["coins"]
+        return int(account["coins"])
 
     @tornado.gen.coroutine
     def get_unresolved_idea_count(self):
@@ -214,12 +216,14 @@ class IndexRequestHandler(RequestHandler):
             spec["close_date"] = {"$lt": self.now}
         elif status != "all":
             spec["freeze_date"] = {"$gt": self.now}
+            if self.current_user:
+                spec["bets"] = {"$not": {"$elemMatch": {"account_id": self.current_user.account_id}}}
         ideas = yield self.db.ideas.find(spec).\
             sort("freeze_date", pymongo.DESCENDING).\
             skip((page - 1) * self.PAGE_SIZE).\
             limit(self.PAGE_SIZE).\
             to_list(self.PAGE_SIZE)
-        self.render("index.html", ideas=ideas, page=page, path=self.request.path)
+        self.render("index.html", ideas=ideas, page=page, path=self.request.path, status=status)
 
     def parse_arguments(self):
         page = int(self.get_query_argument("page", 1))
@@ -255,7 +259,7 @@ class LogInRequestHandler(RequestHandler):
     def create_account(self, account_id):
         "Creates a new account with initial balance."
         try:
-            yield self.db.accounts.insert({"_id": account_id, "coins": 100})
+            yield self.db.accounts.insert({"_id": account_id, "coins": 100.0})
             yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id)
         except pymongo.errors.DuplicateKeyError:
             pass
@@ -342,7 +346,8 @@ class IdeaRequestHandler(RequestHandler):
             return
         idea = yield self.db.ideas.find_one({"_id": _id})
         if idea:
-            self.render("idea.html", idea=idea, _xsrf=self.xsrf_form_html())
+            budget = sum(map(operator.itemgetter("coins"), idea["bets"]))
+            self.render("idea.html", idea=idea, budget=budget, _xsrf=self.xsrf_form_html())
         else:
             self.send_error(http.client.NOT_FOUND)
 

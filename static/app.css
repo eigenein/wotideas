@@ -445,21 +445,6 @@ h2 {
   -moz-box-shadow: 0 3px 4px -3px rgba(0, 0, 0, 0.1);
   box-shadow: 0 3px 4px -3px rgba(0, 0, 0, 0.1);
 }
-.idea-footer ul li {
-  display: inline-block;
-  font-size: 16px;
-  margin-right: 10px;
-}
-.idea-footer ul a {
-  color: #0099cc;
-  border: none;
-}
-.idea-footer ul a:hover {
-  color: #cc0000;
-}
-.idea-footer ul .bet {
-  color: #cc0000;
-}
 form {
   margin: 0;
   padding: 0;
@@ -552,7 +537,7 @@ input:checked + .button {
   outline: none;
 }
 .button.button-green {
-  background: #99cc00;
+  background: rgba(153, 204, 0, 0.5);
   -webkit-box-shadow: 0 0 5px 0 #669900;
   -moz-box-shadow: 0 0 5px 0 #669900;
   box-shadow: 0 0 5px 0 #669900;
@@ -562,7 +547,7 @@ input:checked + .button.button-green {
   background: #669900;
 }
 .button.button-red {
-  background: #ff4444;
+  background: rgba(255, 68, 68, 0.5);
   -webkit-box-shadow: 0 0 5px 0 #cc0000;
   -moz-box-shadow: 0 0 5px 0 #cc0000;
   box-shadow: 0 0 5px 0 #cc0000;
@@ -652,4 +637,19 @@ td.right {
 .budget {
   color: #ff8800;
   font-size: 24px;
+}
+.empty-index {
+  font-size: 24px;
+  margin: 20px;
+  background: white;
+  border: 1px solid #eaeaea;
+  padding: 20px;
+}
+.bet-warning {
+  color: #ff4444;
+  font-size: 12.8px;
+}
+.bet-hint {
+  color: #669900;
+  font-weight: bold;
 }

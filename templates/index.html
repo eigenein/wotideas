@@ -7,12 +7,19 @@
   </p>
 </section>
 
+{% if not ideas %}
+<div class="empty-index">
+  {% if status == "unresolved" %}Решения по всем событиям приняты.
+  {% elif status == "closed" %}Пока нет завершенных событий.
+  {% else %}Нет новых событий.
+  {% end %}<a href="/all">Просмотреть все события</a>
+</div>
+{% end %}
 {% for idea in ideas %}
 <section class="idea {% if is_idea_closed(idea) %}closed-idea{% elif is_idea_frozen(idea) %}frozen-idea{% else %}open-idea{% end %}">
   <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
   <small>Заморозка: <strong class="freeze-date">{{ format_date(idea["freeze_date"]) }} UTC</strong>. Завершение: <strong class="close-date">{{ format_date(idea["close_date"]) }} UTC</strong>.</small>
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
-  <div class="idea-footer"><ul><li class="bet">Ваша ставка: <strong>15</strong> на <strong>«Произойдет»</strong>.{% if not idea["resolved"] %} Событие ожидает решения.{% end %}</li></ul></div>
 </section>
 {% end %}
 
