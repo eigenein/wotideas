@@ -18,7 +18,7 @@
 {% for idea in ideas %}
 <section class="idea {% if is_idea_closed(idea) %}closed-idea{% elif is_idea_frozen(idea) %}frozen-idea{% else %}open-idea{% end %}">
   <h2><a href="/i/{{ encode_object_id(idea['_id']) }}">{{ idea["title"] }}</a></h2>
-  <small>Заморозка: <strong class="freeze-date">{{ format_date(idea["freeze_date"]) }} UTC</strong>. Завершение: <strong class="close-date">{{ format_date(idea["close_date"]) }} UTC</strong>.</small>
+  <small>Заморозка: <strong class="freeze-date">{{ format_date(idea["freeze_date"]) }}</strong>. Завершение: <strong class="close-date">{{ format_date(idea["close_date"]) }}</strong>.</small>
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
 </section>
 {% end %}

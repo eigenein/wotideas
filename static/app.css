@@ -628,6 +628,9 @@ th.right,
 td.right {
   text-align: right;
 }
+tr:nth-child(even) {
+  background-color: #fafafa;
+}
 .positive {
   color: #669900;
 }

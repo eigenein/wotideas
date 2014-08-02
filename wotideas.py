@@ -70,7 +70,8 @@ def initialize_database(name):
     db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
     db.ideas.ensure_index("resolved", pymongo.ASCENDING)
-    db.ideas.ensure_index("bets.account_id", pymongo.ASCENDING)
+    db.ideas.ensure_index("bets", pymongo.ASCENDING)
+    db.events.ensure_index("type", pymongo.ASCENDING)
     return db
 
 
@@ -84,6 +85,7 @@ def initialize_web_application(db):
             (r"/new", NewRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)", IdeaRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)/bet", BetRequestHandler),
+            (r"/balance", BalanceRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -135,7 +137,7 @@ def is_idea_closed(idea):
 
 def format_date(date):
     "Formats date and time."
-    return "{date.day}.{date.month:02}.{date.year:04} {date.hour}:{date.minute:02}".format(date=date)
+    return "{date.day}.{date.month:02}.{date.year:04} {date.hour}:{date.minute:02} UTC".format(date=date)
 
 
 class RequestHandler(tornado.web.RequestHandler):
@@ -209,17 +211,22 @@ class IndexRequestHandler(RequestHandler):
             return
         spec = {}
         if status == "unresolved":
+            sort_by, direction = "close_date", pymongo.ASCENDING
             spec["resolved"] = False
             spec["close_date"] = {"$lt": self.now}
         elif status == "closed":
+            sort_by, direction = "close_date", pymongo.DESCENDING
             spec["resolved"] = True
             spec["close_date"] = {"$lt": self.now}
-        elif status != "all":
+        elif status == "all":
+            sort_by, direction = "freeze_date", pymongo.DESCENDING
+        else:
+            sort_by, direction = "freeze_date", pymongo.ASCENDING
             spec["freeze_date"] = {"$gt": self.now}
             if self.current_user:
-                spec["bets"] = {"$not": {"$elemMatch": {"account_id": self.current_user.account_id}}}
+                spec["bets.account_id"] = {"$ne": self.current_user.account_id}
         ideas = yield self.db.ideas.find(spec).\
-            sort("freeze_date", pymongo.DESCENDING).\
+            sort(sort_by, direction).\
             skip((page - 1) * self.PAGE_SIZE).\
             limit(self.PAGE_SIZE).\
             to_list(self.PAGE_SIZE)
@@ -398,6 +405,21 @@ class BetRequestHandler(RequestHandler):
             {"$push": {"bets": {"account_id": user.account_id, "nickname": user.nickname, "coins": coins, "bet": bet}}},
         )
         yield self.log_event(SystemEventType.MADE_BET, account_id=user.account_id, idea_id=idea_id, bet=bet, coins=coins, coins_left=account["coins"])
+
+
+# Balance handler.
+# ------------------------------------------------------------------------------
+
+class BalanceRequestHandler(RequestHandler):
+    "User balance handler."
+
+    @tornado.gen.coroutine
+    def get(self):
+        if not self.current_user:
+            self.redirect("/")
+        spec = {"type": {"$in": [SystemEventType.SET_INITIAL_BALANCE.value, SystemEventType.MADE_BET.value]}}
+        events = yield self.db.events.find(spec).sort("_id", pymongo.DESCENDING).to_list(100)
+        self.render("balance.html", events=events)
 
 
 # Log out handler.
