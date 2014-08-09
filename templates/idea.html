@@ -2,6 +2,11 @@
 
 {% block title %}{{ idea["title"] }} — {% end %}
 
+{% block head %}
+<meta property="og:title" content="{{ idea['title'] }}">
+<meta property="og:description" content="{{ idea['description'][0] }}">
+{% end %}
+
 {% block content %}
 <section class="idea with-aside">
   {% set urlsafe_id = encode_object_id(idea['_id']) %}
