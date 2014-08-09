@@ -90,6 +90,7 @@ def initialize_web_application(db):
             (r"/new", NewRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)", IdeaRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)/bet", BetRequestHandler),
+            (r"/i/([a-zA-Z0-9_\-\=]+)/resolve", ResolveRequestHandler),
             (r"/balance", BalanceRequestHandler),
             (r"/profile", ProfileRequestHandler),
             (r"/accounts", AccountsRequestHandler),
@@ -472,6 +473,41 @@ class AccountsRequestHandler(RequestHandler):
         accounts = yield self.db.accounts.find().sort("coins", pymongo.DESCENDING).limit(self.LIMIT).to_list(self.LIMIT)
         self.render("accounts.html", accounts=accounts)
 
+
+# Resolve handler.
+# ------------------------------------------------------------------------------
+
+class ResolveRequestHandler(RequestHandler):
+    "Resolve handler."
+
+    @tornado.gen.coroutine
+    def prepare(self):
+        yield super().prepare()
+        if not self.is_admin:
+            self.send_error(http.client.UNAUTHORIZED)
+
+    @tornado.gen.coroutine
+    def post(self, urlsafe_id):
+        try:
+            idea_id = decode_object_id(urlsafe_id)
+            resolution, proof = self.parse_arguments()
+            yield self.resolve(idea_id, resolution, proof)
+        except (ValueError, tornado.web.MissingArgumentError):
+            self.handle_bad_request()
+            return
+        else:
+            self.redirect("/i/{}".format(urlsafe_id))
+
+    def parse_arguments(self):
+        resolution = bool(int(self.get_argument("resolution")))
+        proof = self.get_argument("proof")
+        if not proof:
+            raise ValueError("empty proof")
+        return resolution, proof
+
+    def resolve(self, idea_id, resolution, proof):
+        "Resolves idea."
+        pass
 
 # Log out handler.
 # ------------------------------------------------------------------------------

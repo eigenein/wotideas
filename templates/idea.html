@@ -17,6 +17,13 @@
   -->{% raw _xsrf %}</form>
   <p class="bet-warning">Вы не можете изменить или отменить свою ставку, но можете сделать несколько ставок.</p>
   {% if not idea["bets"] %}<p class="bet-hint">Сделайте ставку первым!</p>{% end %}
+  {% elif is_admin and not idea["resolved"] and is_idea_closed(idea) %}
+  <form method="post" action="/i/{{ urlsafe_id }}/resolve"><!--
+    --><input type="text" name="proof" placeholder="Пруфлинк" style="padding: 10px; width: 400px;"><!--
+    --><input type="radio" name="resolution" id="resolution-true" value="1" checked><label for="resolution-true" class="button button-green" style="margin-right: 0">Произошло</label><!--
+    --><input type="radio" name="resolution" id="resolution-false" value="0"><label for="resolution-false" class="button button-red" style="margin-left: 0">Не произошло</label><!--
+    --><input class="button" type="submit" value="Отправить"><!--
+  -->{% raw _xsrf %}</form>
   {% end %}
 
   {% if idea["bets"] %}
@@ -31,7 +38,11 @@
 </section>
 <aside>
   {% if is_idea_closed(idea) %}
+  {% if idea["resolved"] %}
   <div class="badge badge-red">Закрыто</div>
+  {% else %}
+  <div class="badge badge-red">Ожидает решения</div>
+  {% end %}
   {% elif is_idea_frozen(idea) %}
   <div class="badge badge-orange">Заморожено</div>
   {% else %}
