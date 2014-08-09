@@ -22,6 +22,24 @@ def test_encode_object_id():
     assert wotideas.decode_object_id(wotideas.encode_object_id(object_id)) == object_id
 
 
+# Prize tests.
+# ------------------------------------------------------------------------------
+
+def bet(account_id, bet, coins):
+    "Shortcut."
+    return {"account_id": account_id, "bet": bet, "coins": float(coins)}
+
+
+@pytest.mark.parametrize("bets, resolution, prizes", [
+    ([], True, []),
+    ([bet(1, True, 100), bet(2, False, 50)], True, [wotideas.Prize(1, 150.0)]),
+    ([bet(1, True, 100), bet(2, True, 50)], False, []),
+])
+def test_get_prizes(bets, resolution, prizes):
+    "Tests get_prizes."
+    assert wotideas.get_prizes(bets, resolution) == prizes
+
+
 # Web handler tests.
 # ------------------------------------------------------------------------------
 
