@@ -8,7 +8,8 @@
   <h2><a href="/i/{{ urlsafe_id }}">{{ idea["title"] }}</a></h2>
 
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
-  {% if not is_idea_frozen(idea) %}
+
+  {% if current_user is not None and not is_idea_frozen(idea) %}
   <form method="post" action="/i/{{ urlsafe_id }}/bet"><!--
     --><input type="number" name="coins" min="1" step="1" max="{{ balance }}" value="{{ balance // 5 }}"><!--
     --><input type="radio" name="bet" id="bet-true" value="1" checked><label for="bet-true" class="button button-green" style="margin-right: 0">Произойдет</label><!--
