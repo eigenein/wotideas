@@ -607,6 +607,13 @@ label {
 .badge-red {
   background: #cc0000;
 }
+.badge-proof {
+  text-align: left;
+  background: white;
+  color: black;
+  border: 1px dotted black;
+  font-size: 12.8px;
+}
 h3 {
   margin: 10px 0;
   font-size: 15px;
