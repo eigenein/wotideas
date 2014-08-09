@@ -24,7 +24,7 @@
           -->{% if current_user %}<li><a href="/profile">{{ current_user.nickname }}</a></li><!--
           --><li><strong><a href="/balance">{{ balance }} монет</a></strong></li><!--
           --><li><a href="/logout">Выйти</a></li><!--
-          -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти" class="link"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8080/login"></form></li>{% end %}<!--
+          -->{% else %}<li><form method="post" action="https://api.worldoftanks.ru/wot/auth/login/"><input type="submit" value="Войти" class="link"><input type="hidden" name="application_id" value="{{ application_id }}"><input type="hidden" name="redirect_uri" value="http://localhost:8081/login"></form></li>{% end %}<!--
         --></ul>
       </nav>
     </header>

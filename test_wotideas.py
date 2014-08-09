@@ -22,20 +22,31 @@ def test_encode_object_id():
     assert wotideas.decode_object_id(wotideas.encode_object_id(object_id)) == object_id
 
 
-# Web handlers.
+# Web handler tests.
 # ------------------------------------------------------------------------------
-
-@pytest.fixture(scope="session")
-def session():
-    "Gets web session."
-    return requests.Session()
-
 
 @pytest.fixture(scope="session")
 def url():
     "Gets website URL."
     return "http://localhost:{}".format(wotideas.HTTP_PORT)
 
+@pytest.fixture(scope="session")
+def anonymous_session():
+    "Gets anonymous user session."
+    return requests.Session()
 
-def test_home(session, url):
-    session.get(url)
+
+@pytest.fixture(scope="session")
+def loggedin_session(url):
+    "Gets logged in user session."
+    session = requests.Session()
+    session.get("{}/login?status=ok&account_id=1&nickname=py.test".format(url)).raise_for_status()
+    return session
+
+
+def test_anonymous_home(anonymous_session, url):
+    anonymous_session.get(url).raise_for_status()
+
+
+def test_loggedin_home(loggedin_session, url):
+    loggedin_session.get(url).raise_for_status()
