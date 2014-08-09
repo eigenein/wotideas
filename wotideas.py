@@ -120,6 +120,7 @@ class SystemEventType(enum.Enum):
     IDEA_RESOLVING = 4
     IDEA_RESOLVED = 5
     WIN = 6
+    SET_EMAIL = 7
 
 
 # Base request handler.
@@ -495,7 +496,8 @@ class ProfileRequestHandler(RequestHandler):
             },
             {"$group": {"_id": "$type", "count": {"$sum": 1}, "coins": {"$sum": "$kwargs.coins"}}},
         ])
-        return {SystemEventType(doc["_id"]): doc for doc in result["result"]}
+        return collections.defaultdict(lambda: collections.defaultdict(int),
+            {SystemEventType(doc["_id"]): doc for doc in result["result"]})
 
     @tornado.gen.coroutine
     def set_email(self, email):
@@ -503,6 +505,7 @@ class ProfileRequestHandler(RequestHandler):
             "email": email,
             "confirmed": False,
         }})
+        yield self.log_event(SystemEventType.SET_EMAIL, account_id=self.current_user.account_id, email=email)
 
 
 # Account list handler.
