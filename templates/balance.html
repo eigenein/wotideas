@@ -4,15 +4,19 @@
 
 {% block content %}
 {% set event_type_description = {
-  2: "Начисление за первый вход на сайт",
-  3: "Сделана ставка",
+  SystemEventType.SET_INITIAL_BALANCE.value: (
+    lambda event: "Начисление за первый вход на сайт"
+  ),
+  SystemEventType.MADE_BET.value: (
+    lambda event: "Сделана ставка на <a href='/i/{}'>событие</a>".format(encode_object_id(event["kwargs"]["idea_id"]))
+  ),
 } %}
 <section class="idea">
   <h2>Ваш баланс</h2>
   <table>
     <tr><th>Дата</th><th>Изменение</th><th class="right">Сумма</th></tr>
     {% for event in events %}
-    <tr><td>{{ format_date(event["_id"].generation_time) }}</td><td>{{ event_type_description[event["type"]] }}</td><td class="right">TODO</td></tr>
+    <tr><td>{{ format_date(event["_id"].generation_time) }}</td><td>{% raw event_type_description[event["type"]](event) %}</td><td class="right">{{ event["kwargs"]["coins"] }}</td></tr>
     {% end %}
   </table>
 </section>

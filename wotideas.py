@@ -72,6 +72,7 @@ def initialize_database(name):
     db.ideas.ensure_index("resolved", pymongo.ASCENDING)
     db.ideas.ensure_index("bets", pymongo.ASCENDING)
     db.events.ensure_index("type", pymongo.ASCENDING)
+    db.events.ensure_index("kwargs.account_id", pymongo.ASCENDING, sparse=True)
     return db
 
 
@@ -168,6 +169,7 @@ class RequestHandler(tornado.web.RequestHandler):
             "is_admin": self.is_admin,
             "is_idea_closed": is_idea_closed,
             "is_idea_frozen": is_idea_frozen,
+            "SystemEventType": SystemEventType,
         }
 
     @tornado.gen.coroutine
@@ -267,7 +269,7 @@ class LogInRequestHandler(RequestHandler):
         "Creates a new account with initial balance."
         try:
             yield self.db.accounts.insert({"_id": account_id, "coins": 100.0})
-            yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id)
+            yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id, coins=100.0)
         except pymongo.errors.DuplicateKeyError:
             pass
 
@@ -353,7 +355,7 @@ class IdeaRequestHandler(RequestHandler):
             return
         idea = yield self.db.ideas.find_one({"_id": _id})
         if idea:
-            budget = sum(map(operator.itemgetter("coins"), idea["bets"]))
+            budget = int(sum(map(operator.itemgetter("coins"), idea["bets"])))
             self.render("idea.html", idea=idea, budget=budget, _xsrf=self.xsrf_form_html())
         else:
             self.send_error(http.client.NOT_FOUND)
@@ -382,7 +384,7 @@ class BetRequestHandler(RequestHandler):
 
     def parse_arguments(self):
         bet = bool(int(self.get_argument("bet")))
-        coins = int(self.get_argument("coins"))
+        coins = float(self.get_argument("coins"))
         if coins <= 0:
             raise ValueError("invalid coins value: %s" % coins)
         return bet, coins
@@ -417,7 +419,10 @@ class BalanceRequestHandler(RequestHandler):
     def get(self):
         if not self.current_user:
             self.redirect("/")
-        spec = {"type": {"$in": [SystemEventType.SET_INITIAL_BALANCE.value, SystemEventType.MADE_BET.value]}}
+        spec = {
+            "kwargs.account_id": self.current_user.account_id,
+            "type": {"$in": [SystemEventType.SET_INITIAL_BALANCE.value, SystemEventType.MADE_BET.value]}
+        }
         events = yield self.db.events.find(spec).sort("_id", pymongo.DESCENDING).to_list(100)
         self.render("balance.html", events=events)
 
