@@ -68,3 +68,11 @@ def test_anonymous_home(anonymous_session, url):
 
 def test_loggedin_home(loggedin_session, url):
     loggedin_session.get(url).raise_for_status()
+
+
+def test_profile(loggedin_session, url):
+    loggedin_session.get("{}/profile".format(url)).raise_for_status()
+
+
+def test_balance(loggedin_session, url):
+    loggedin_session.get("{}/balance".format(url)).raise_for_status()
