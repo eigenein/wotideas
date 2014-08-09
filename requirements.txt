@@ -1,2 +1,3 @@
 motor==0.3.2
 tornado==4.0
+tornado-smtpclient==0.1.0

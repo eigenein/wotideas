@@ -27,6 +27,9 @@ import tornado.web
 import config
 
 
+HTTP_PORT = 8081
+
+
 # Application entry point.
 # ------------------------------------------------------------------------------
 
@@ -37,7 +40,7 @@ def main(args):
     logging.info("Initializing database…")
     db = initialize_database("wotideas")
     logging.info("Initializing application…")
-    initialize_web_application(db).listen(8080)
+    initialize_web_application(db).listen(HTTP_PORT)
     logging.info("I/O loop is being started.")
     tornado.ioloop.IOLoop.current().start()
 
@@ -87,6 +90,7 @@ def initialize_web_application(db):
             (r"/i/([a-zA-Z0-9_\-\=]+)", IdeaRequestHandler),
             (r"/i/([a-zA-Z0-9_\-\=]+)/bet", BetRequestHandler),
             (r"/balance", BalanceRequestHandler),
+            (r"/profile", ProfileRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -437,6 +441,19 @@ class BalanceRequestHandler(RequestHandler):
         }
         events = yield self.db.events.find(spec).sort("_id", pymongo.DESCENDING).to_list(100)
         self.render("balance.html", events=events)
+
+
+# Balance handler.
+# ------------------------------------------------------------------------------
+
+class ProfileRequestHandler(RequestHandler):
+    "User profile handler."
+
+    @tornado.gen.coroutine
+    def get(self):
+        if not self.current_user:
+            self.redirect("/")
+        self.render("profile.html")
 
 
 # Log out handler.

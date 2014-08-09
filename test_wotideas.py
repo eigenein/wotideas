@@ -6,6 +6,7 @@
 import bson
 import motor
 import pytest
+import requests
 import tornado.gen
 import tornado.ioloop
 
@@ -21,23 +22,20 @@ def test_encode_object_id():
     assert wotideas.decode_object_id(wotideas.encode_object_id(object_id)) == object_id
 
 
-# Async tests.
+# Web handlers.
 # ------------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
-def run_sync():
-    "Gets a function to run another function synchronously."
-    return tornado.ioloop.IOLoop.instance().run_sync
+def session():
+    "Gets web session."
+    return requests.Session()
 
 
 @pytest.fixture(scope="session")
-def db():
-    "Gets initialized database."
-    return wotideas.initialize_database("test_wotideas")
+def url():
+    "Gets website URL."
+    return "http://localhost:{}".format(wotideas.HTTP_PORT)
 
 
-@pytest.fixture
-def ideas(run_sync, db):
-    "Gets ideas collection."
-    run_sync(db.ideas.remove)
-    return db.ideas
+def test_home(session, url):
+    session.get(url)
