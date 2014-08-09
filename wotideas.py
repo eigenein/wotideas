@@ -505,9 +505,14 @@ class ResolveRequestHandler(RequestHandler):
             raise ValueError("empty proof")
         return resolution, proof
 
+    @tornado.gen.coroutine
     def resolve(self, idea_id, resolution, proof):
         "Resolves idea."
-        pass
+        yield self.db.ideas.update({"_id": idea_id}, {"$set": {
+            "resolved": True,
+            "resolution": resolution,
+            "proof": proof,
+        }})
 
 # Log out handler.
 # ------------------------------------------------------------------------------
