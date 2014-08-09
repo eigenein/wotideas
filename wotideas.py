@@ -108,6 +108,8 @@ def initialize_web_application(db):
 
 User = collections.namedtuple("User", ["account_id", "nickname"])
 
+Prize = collections.namedtuple("Prize", ["account_id", "coins"])
+
 
 class SystemEventType(enum.Enum):
     "System event type. Do not change these constants."
@@ -115,6 +117,9 @@ class SystemEventType(enum.Enum):
     LOGGED_IN = 1
     SET_INITIAL_BALANCE = 2
     MADE_BET = 3
+    IDEA_RESOLVING = 4
+    IDEA_RESOLVED = 5
+    WIN = 6
 
 
 # Base request handler.
@@ -350,6 +355,10 @@ class NewRequestHandler(RequestHandler):
 # Idea handler.
 # ------------------------------------------------------------------------------
 
+def get_bets_budget(bets):
+    "Gets idea bets total sum."
+    return sum(map(operator.itemgetter("coins"), bets))
+
 
 class IdeaRequestHandler(RequestHandler):
     "Idea handler."
@@ -363,7 +372,7 @@ class IdeaRequestHandler(RequestHandler):
             return
         idea = yield self.db.ideas.find_one({"_id": _id})
         if idea:
-            budget = int(sum(map(operator.itemgetter("coins"), idea["bets"])))
+            budget = int(get_bets_budget(idea["bets"]))
             self.render("idea.html", idea=idea, budget=budget, _xsrf=self.xsrf_form_html())
         else:
             self.send_error(http.client.NOT_FOUND)
@@ -425,7 +434,7 @@ class BetRequestHandler(RequestHandler):
             idea_id=idea_id,
             bet=bet,
             coins=coins,
-            coins_left=account["coins"],
+            balance=account["coins"],
         )
 
 
@@ -441,7 +450,11 @@ class BalanceRequestHandler(RequestHandler):
             self.redirect("/")
         spec = {
             "kwargs.account_id": self.current_user.account_id,
-            "type": {"$in": [SystemEventType.SET_INITIAL_BALANCE.value, SystemEventType.MADE_BET.value]}
+            "type": {"$in": [
+                SystemEventType.SET_INITIAL_BALANCE.value,
+                SystemEventType.MADE_BET.value,
+                SystemEventType.WIN.value,
+            ]}
         }
         events = yield self.db.events.find(spec).sort("_id", pymongo.DESCENDING).to_list(100)
         self.render("balance.html", events=events)
@@ -508,11 +521,50 @@ class ResolveRequestHandler(RequestHandler):
     @tornado.gen.coroutine
     def resolve(self, idea_id, resolution, proof):
         "Resolves idea."
+        idea = yield self.db.ideas.find_one({"_id": idea_id})
+        if not idea:
+            raise ValueError("idea not found")
+        # Start updating coins.
+        yield self.log_event(SystemEventType.IDEA_RESOLVING, idea_id=idea_id)
+        # Get prizes.
+        prizes = get_prizes(idea["bets"], resolution)
+        for prize in prizes:
+            # Update coins.
+            account = yield self.db.accounts.find_and_modify(
+                {"_id": prize.account_id},
+                {"$inc": {"coins": prize.coins}},
+                new=True,
+            )
+            # Log event.
+            yield self.log_event(
+                SystemEventType.WIN,
+                account_id=prize.account_id,
+                coins=prize.coins,
+                balance=account["coins"],
+                idea_id=idea_id,
+            )
+        # Resolve idea.
         yield self.db.ideas.update({"_id": idea_id}, {"$set": {
             "resolved": True,
             "resolution": resolution,
             "proof": proof,
         }})
+        # Finish updating coins.
+        yield self.log_event(SystemEventType.IDEA_RESOLVED, idea_id=idea_id)
+
+
+def get_prizes(bets, resolution):
+    "Gets idea prizes for the specified bets and resolution."
+    if not bets:
+        logging.info("No bets.")
+        return []
+    winners = [bet for bet in bets if bet["bet"] == resolution]
+    logging.info("Total bets: %d. %d winners.", len(bets), len(winners))
+    total_budget = get_bets_budget(bets)
+    winners_budget = get_bets_budget(winners)
+    logging.info("Total budget: %.2f. Winners budget: %.2f.", total_budget, winners_budget)
+    return [Prize(bet["account_id"], total_budget * bet["coins"] / winners_budget) for bet in winners]
+
 
 # Log out handler.
 # ------------------------------------------------------------------------------

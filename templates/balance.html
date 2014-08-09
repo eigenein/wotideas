@@ -10,13 +10,16 @@
   SystemEventType.MADE_BET.value: (
     lambda event: "Сделана ставка на <a href='/i/{}'>событие</a>".format(encode_object_id(event["kwargs"]["idea_id"]))
   ),
+  SystemEventType.WIN.value: (
+    lambda event: "Выигрыш в <a href='/i/{}'>событии</a>".format(encode_object_id(event["kwargs"]["idea_id"]))
+  ),
 } %}
 <section class="idea">
   <h2>Ваш баланс</h2>
   <table>
     <tr><th>Дата</th><th>Изменение</th><th class="right">Сумма</th></tr>
     {% for event in events %}
-    <tr><td>{{ format_date(event["_id"].generation_time) }}</td><td>{% raw event_type_description[event["type"]](event) %}</td><td class="right">{{ event["kwargs"]["coins"] }}</td></tr>
+    <tr><td>{{ format_date(event["_id"].generation_time) }}</td><td>{% raw event_type_description[event["type"]](event) %}</td><td class="right">{{ "{:.2f}".format(event["kwargs"]["coins"]) }}</td></tr>
     {% end %}
   </table>
 </section>
