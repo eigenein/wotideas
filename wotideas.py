@@ -470,7 +470,39 @@ class ProfileRequestHandler(RequestHandler):
     def get(self):
         if not self.current_user:
             self.redirect("/")
-        self.render("profile.html")
+        profile = yield self.db.accounts.find_one({"_id": self.current_user.account_id})
+        statistics = yield self.get_statistics()
+        self.render("profile.html", profile=profile, statistics=statistics, _xsrf=self.xsrf_form_html())
+
+    @tornado.gen.coroutine
+    def post(self):
+        if not self.current_user:
+            self.handle_bad_request()
+        email = self.get_argument("email")
+        if email:
+            yield self.set_email(email)
+        self.redirect("/profile")
+
+    @tornado.gen.coroutine
+    def get_statistics(self):
+        "Gets profile statistics."
+        result = yield self.db.events.aggregate([
+            {
+                "$match": {
+                    "kwargs.account_id": self.current_user.account_id,
+                    "type": {"$in": [SystemEventType.MADE_BET.value, SystemEventType.WIN.value]},
+                }
+            },
+            {"$group": {"_id": "$type", "count": {"$sum": 1}, "coins": {"$sum": "$kwargs.coins"}}},
+        ])
+        return {SystemEventType(doc["_id"]): doc for doc in result["result"]}
+
+    @tornado.gen.coroutine
+    def set_email(self, email):
+        yield self.db.accounts.update({"_id": self.current_user.account_id}, {"$set": {
+            "email": email,
+            "confirmed": False,
+        }})
 
 
 # Account list handler.

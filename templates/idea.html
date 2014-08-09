@@ -10,7 +10,7 @@
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
   {% if not is_idea_frozen(idea) %}
   <form method="post" action="/i/{{ urlsafe_id }}/bet"><!--
-    --><input type="number" name="coins" min="1" step="1" max="{{ balance }}" value="{{ balance // 5 }}" style="padding: 10px"><!--
+    --><input type="number" name="coins" min="1" step="1" max="{{ balance }}" value="{{ balance // 5 }}"><!--
     --><input type="radio" name="bet" id="bet-true" value="1" checked><label for="bet-true" class="button button-green" style="margin-right: 0">Произойдет</label><!--
     --><input type="radio" name="bet" id="bet-false" value="0"><label for="bet-false" class="button button-red" style="margin-left: 0">Не произойдет</label><!--
     --><input class="button" type="submit" value="Сделать ставку"><!--
@@ -19,7 +19,7 @@
   {% if not idea["bets"] %}<p class="bet-hint">Сделайте ставку первым!</p>{% end %}
   {% elif is_admin and not idea["resolved"] and is_idea_closed(idea) %}
   <form method="post" action="/i/{{ urlsafe_id }}/resolve"><!--
-    --><input type="text" name="proof" placeholder="Пруфлинк" style="padding: 10px; width: 400px;"><!--
+    --><input type="text" name="proof" placeholder="Пруфлинк" style="width: 400px;"><!--
     --><input type="radio" name="resolution" id="resolution-true" value="1"><label for="resolution-true" class="button button-green" style="margin-right: 0">Произошло</label><!--
     --><input type="radio" name="resolution" id="resolution-false" value="0"><label for="resolution-false" class="button button-red" style="margin-left: 0">Не произошло</label><!--
     --><input class="button" type="submit" value="Отправить"><!--

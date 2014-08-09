@@ -184,20 +184,20 @@ fieldset {
   border: none;
 }
 
-form {
-  input, textarea {
-    padding: @xsmall-margin;
+input, textarea {
+  border: 1px solid @light;
+  &:focus {
+    border-color: @dark;
   }
-  input, textarea {
-    border: 1px solid @light;
-    &:focus {
-      border-color: @dark;
-    }
-  }
-  input[type=date], input[type=time] {
-    width: auto;
-    margin: 0 @xsmall-margin;
-  }
+}
+
+input[type=date], input[type=time] {
+  width: auto;
+  margin: 0 @xsmall-margin;
+}
+
+input[type=text], input[type=number], input[type=email], textarea {
+  padding: @small-margin;
 }
 
 .full-width {
@@ -334,6 +334,12 @@ th {
 
 th.right, td.right {
   text-align: right;
+}
+
+tr.center {
+  th, td {
+    text-align: center;
+  }
 }
 
 tr:nth-child(even) {

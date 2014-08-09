@@ -5,5 +5,20 @@
 {% block content %}
 <section class="idea">
   <h2>{{ current_user.nickname }}</h2>
+  <table>
+    <tr class="center"><th>Ставок</th><th>Выигрышей</th><th>Потрачено</th><th>Выиграно</th></tr>
+    <tr class="center">
+      <td>{{ statistics[SystemEventType.MADE_BET]["count"] }}</td>
+      <td>{{ statistics[SystemEventType.WIN]["count"] }}</td>
+      <td>{{ statistics[SystemEventType.MADE_BET]["coins"] }}</td>
+      <td>{{ statistics[SystemEventType.WIN]["coins"] }}</td>
+    </tr>
+  </table>
+  <h3>Email</h3>
+  <form method="post" action="/profile"><!--
+    --><input type="email" id="email" name="email" placeholder="name@example.org" value="{{ profile.get('email', '') }}" required><!--
+    --><input class="button" type="submit" value="Обновить"></fieldset><!--
+    -->{% raw _xsrf %}<!--
+  --></form>
 </section>
 {% end %}
