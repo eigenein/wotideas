@@ -4,5 +4,7 @@ python:
 services:
   - mongodb
 install: "pip install -r requirements.txt"
-before_script: python wotideas.py && sleep 3
+before_script:
+  - python wotideas.py &
+  - sleep 3
 script: py.test -v
