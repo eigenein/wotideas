@@ -6,14 +6,19 @@
 <section class="idea with-aside">
   {% set urlsafe_id = encode_object_id(idea['_id']) %}
   <h2><a href="/i/{{ urlsafe_id }}">{{ idea["title"] }}</a></h2>
+
   {% for line in idea["description"] %}<p>{{ line }}</p>{% end %}
-  <p class="bet-warning">Вы не можете изменить или отменить свою ставку, но можете сделать несколько ставок.</p>
+  {% if not is_idea_frozen(idea) %}
   <form method="post" action="/i/{{ urlsafe_id }}/bet"><!--
     --><input type="number" name="coins" min="1" step="1" max="{{ balance }}" value="{{ balance // 5 }}" style="padding: 10px"><!--
     --><input type="radio" name="bet" id="bet-true" value="1" checked><label for="bet-true" class="button button-green" style="margin-right: 0">Произойдет</label><!--
     --><input type="radio" name="bet" id="bet-false" value="0"><label for="bet-false" class="button button-red" style="margin-left: 0">Не произойдет</label><!--
     --><input class="button" type="submit" value="Сделать ставку"><!--
   -->{% raw _xsrf %}</form>
+  <p class="bet-warning">Вы не можете изменить или отменить свою ставку, но можете сделать несколько ставок.</p>
+  {% if not idea["bets"] %}<p class="bet-hint">Сделайте ставку первым!</p>{% end %}
+  {% end %}
+
   {% if idea["bets"] %}
   <table>
     <tr><th>Игрок</th><th>Ставка</th><th class="right">Сумма</th></tr>
@@ -21,16 +26,26 @@
     <tr><td>{{ bet["nickname"] }}</td><td>{% if bet["bet"] %}<span class="positive">Произойдет</span>{% else %}<span class="negative">Не произойдет</span>{% end %}</td><td class="right">{{ bet["coins"] }}</td></tr>
     {% end %}
   </table>
-  {% else %}
-  <p class="bet-hint">Сделайте ставку первым!</p>
   {% end %}
+
 </section>
 <aside>
-  {% if is_idea_closed(idea) %}<div class="badge badge-red">Закрыто</div>
-  {% elif is_idea_frozen(idea) %}<div class="badge badge-orange">Заморожено</div>
-  {% else %}<div class="badge badge-green">Открыто</div>
+  {% if is_idea_closed(idea) %}
+  <div class="badge badge-red">Закрыто</div>
+  {% elif is_idea_frozen(idea) %}
+  <div class="badge badge-orange">Заморожено</div>
+  {% else %}
+  <div class="badge badge-green">Открыто</div>
   {% end %}
+
+  {% if idea["resolved"] %}
+  {% if idea["resolution"] %}
   <div class="badge badge-green">Произошло</div>
+  {% else %}
+  <div class="badge badge-red">Не произошло</div>
+  {% end %}
+  {% end %}
+
   <h3>Призовой фонд</h3>
   <span class="budget">{{ budget }}</span>
   <h3>Заморозка</h3>

@@ -577,14 +577,14 @@ label {
   color: #cc0000;
 }
 .with-aside ~ aside {
-  width: 150px;
+  width: 180px;
   position: absolute;
   top: 0;
   right: 0;
   padding: 10px;
 }
 .with-aside {
-  margin-right: 160px;
+  margin-right: 190px;
 }
 .badge {
   width: 100%;

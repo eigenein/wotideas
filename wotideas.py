@@ -392,6 +392,11 @@ class BetRequestHandler(RequestHandler):
     @tornado.gen.coroutine
     def make_bet(self, user, idea_id, bet, coins):
         "Makes a bet."
+        idea = yield self.db.ideas.find_one({"_id": idea_id})
+        if not idea:
+            raise ValueError("idea not found")
+        if is_idea_frozen(idea):
+            raise ValueError("idea is frozen")
         account = yield self.db.accounts.find_and_modify(
             {
                 "_id": user.account_id,
@@ -406,7 +411,14 @@ class BetRequestHandler(RequestHandler):
             {"_id": idea_id},
             {"$push": {"bets": {"account_id": user.account_id, "nickname": user.nickname, "coins": coins, "bet": bet}}},
         )
-        yield self.log_event(SystemEventType.MADE_BET, account_id=user.account_id, idea_id=idea_id, bet=bet, coins=coins, coins_left=account["coins"])
+        yield self.log_event(
+            SystemEventType.MADE_BET,
+            account_id=user.account_id,
+            idea_id=idea_id,
+            bet=bet,
+            coins=coins,
+            coins_left=account["coins"],
+        )
 
 
 # Balance handler.
