@@ -70,6 +70,7 @@ def check_environment():
 def initialize_database(name):
     "Initializes database."
     db = motor.MotorClient()[name]
+    db.accounts.ensure_index("coins", pymongo.DESCENDING)
     db.ideas.ensure_index("close_date", pymongo.DESCENDING)
     db.ideas.ensure_index("freeze_date", pymongo.DESCENDING)
     db.ideas.ensure_index("resolved", pymongo.ASCENDING)
@@ -91,6 +92,7 @@ def initialize_web_application(db):
             (r"/i/([a-zA-Z0-9_\-\=]+)/bet", BetRequestHandler),
             (r"/balance", BalanceRequestHandler),
             (r"/profile", ProfileRequestHandler),
+            (r"/accounts", AccountsRequestHandler),
         ],
         cookie_secret=config.COOKIE_SECRET,
         db=db,
@@ -263,16 +265,17 @@ class LogInRequestHandler(RequestHandler):
     def get(self):
         if self.get_query_argument("status") == "ok":
             account_id = int(self.get_query_argument("account_id"))
-            self.set_secure_cookie("user", pickle.dumps(User(account_id, self.get_query_argument("nickname"))))
-            yield self.create_account(account_id)
+            nickname = self.get_query_argument("nickname")
+            self.set_secure_cookie("user", pickle.dumps(User(account_id, nickname)))
+            yield self.create_account(account_id, nickname)
             yield self.log_event(SystemEventType.LOGGED_IN, account_id=account_id)
         self.redirect(self.get_query_argument("next", "/"))
 
     @tornado.gen.coroutine
-    def create_account(self, account_id):
+    def create_account(self, account_id, nickname):
         "Creates a new account with initial balance."
         try:
-            yield self.db.accounts.insert({"_id": account_id, "coins": 100.0})
+            yield self.db.accounts.insert({"_id": account_id, "nickname": nickname, "coins": 100.0})
             yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id, coins=100.0)
         except pymongo.errors.DuplicateKeyError:
             pass
@@ -454,6 +457,20 @@ class ProfileRequestHandler(RequestHandler):
         if not self.current_user:
             self.redirect("/")
         self.render("profile.html")
+
+
+# Account list handler.
+# ------------------------------------------------------------------------------
+
+class AccountsRequestHandler(RequestHandler):
+    "Account list handler."
+
+    LIMIT = 100
+
+    @tornado.gen.coroutine
+    def get(self):
+        accounts = yield self.db.accounts.find().sort("coins", pymongo.DESCENDING).limit(self.LIMIT).to_list(self.LIMIT)
+        self.render("accounts.html", accounts=accounts)
 
 
 # Log out handler.

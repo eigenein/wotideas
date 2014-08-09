@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Игроки — {% end %}
+
+{% block content %}
+<section class="idea">
+  <h2>Топ-100 игроков</h2>
+  <table>
+    <tr><th>Имя</th><th class="right">Баланс</th></tr>
+    {% for account in accounts %}
+    <tr><td><a href="http://worldoftanks.ru/community/accounts/{{ account['_id'] }}/" target="_blank">{{ account["nickname"] }}</a></td><td class="right">{{ account["coins"] }}</td></tr>
+    {% end %}
+  </table>
+</section>
+{% end %}
