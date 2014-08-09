@@ -274,9 +274,9 @@ class LogInRequestHandler(RequestHandler):
             account_id = int(self.get_query_argument("account_id"))
             nickname = self.get_query_argument("nickname")
             self.set_secure_cookie("user", pickle.dumps(User(account_id, nickname)))
-            yield self.create_account(account_id, nickname)
+            account_created = yield self.create_account(account_id, nickname)
             yield self.log_event(SystemEventType.LOGGED_IN, account_id=account_id)
-        self.redirect(self.get_query_argument("next", "/"))
+        self.redirect("/" if not account_created else "/profile")
 
     @tornado.gen.coroutine
     def create_account(self, account_id, nickname):
@@ -285,7 +285,9 @@ class LogInRequestHandler(RequestHandler):
             yield self.db.accounts.insert({"_id": account_id, "nickname": nickname, "coins": 100.0})
             yield self.log_event(SystemEventType.SET_INITIAL_BALANCE, account_id=account_id, coins=100.0)
         except pymongo.errors.DuplicateKeyError:
-            pass
+            return False
+        else:
+            return True
 
 
 # New idea handler.
